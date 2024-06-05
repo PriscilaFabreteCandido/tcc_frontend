@@ -1,0 +1,27 @@
+.flex {
+  display: flex;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.filtros-card {
+  gap: 0.5rem;
+}
+
+.footer-cadastro {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.pb-1{
+  padding-bottom: 1rem;
+}
+
+:where(.css-dev-only-do-not-override-rie1lx).ant-form-item .ant-form-item-label  {
+  text-align: start;
+}
+

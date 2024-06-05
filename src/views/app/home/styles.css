@@ -1,0 +1,24 @@
+.flex {
+  display: flex;
+}
+
+.bloco-exames {
+  height: 150px;
+  width: 750px;
+}
+
+.neutro-80 {
+  background-color: #2c343a;
+}
+
+.amarelo {
+  background-color: #f3cd03;
+}
+
+
+#home h1, #home  h2, #home  h3,  #home h4, #home h5, #home h6, #home  span{
+  padding: 0;
+  margin: 0;
+  color: white;
+}
+  
