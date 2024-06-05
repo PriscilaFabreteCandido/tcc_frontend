@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   Button,
@@ -76,7 +76,7 @@ const EmitirRelatorio = () => {
     },
   ];
 
-  const onFilter = () => { };
+  const onFilter = () => {};
 
   const items: CollapseProps["items"] = [
     {
@@ -104,7 +104,6 @@ const EmitirRelatorio = () => {
           </div>
 
           <div className="flex gap-1" style={{ gap: "1rem" }}>
-
             <Button
               type="primary"
               onClick={() => {
@@ -118,7 +117,6 @@ const EmitirRelatorio = () => {
               <FilterOutlined className="ifes-icon" />
               <span style={{ marginLeft: "5px" }}>Filtrar</span>
             </Button>
-
 
             <Button
               className="ifes-btn-danger"
@@ -152,17 +150,11 @@ const EmitirRelatorio = () => {
       ),
       children: (
         <div>
-          <Form
-            form={formFilter}
-            layout="vertical"
-          >
+          <Form form={formFilter} layout="vertical">
             <Row gutter={[16, 16]}>
               <Col span={8}>
                 <Form.Item name="ano" label="Ano">
-                  <Select
-                    placeholder="Selecione um período"
-                    style={{ width: "100%" }}
-                  >
+                  <Select placeholder="Selecione um período" style={{ width: "100%" }}>
                     {["2024", "2023", "2022", "2021"].map((option: string) => (
                       <Select.Option key={option} value={option}>
                         {option}
@@ -174,10 +166,7 @@ const EmitirRelatorio = () => {
 
               <Col span={8}>
                 <Form.Item name="tipoAcao" label="Tipo Ação">
-                  <Select
-                    placeholder="Selecione um tipo de ação"
-                    style={{ width: "100%" }}
-                  >
+                  <Select placeholder="Selecione um tipo de ação" style={{ width: "100%" }}>
                     {tiposAcoes.map((option: any) => (
                       <Select.Option key={option.id} value={option.id}>
                         {option.nome}
@@ -189,10 +178,7 @@ const EmitirRelatorio = () => {
 
               <Col span={8}>
                 <Form.Item name="projeto" label="Projeto">
-                  <Select
-                    placeholder="Selecione um projeto"
-                    style={{ width: "100%" }}
-                  >
+                  <Select placeholder="Selecione um projeto" style={{ width: "100%" }}>
                     {tiposAcoes.map((option: any) => (
                       <Select.Option key={option.id} value={option.id}>
                         {option.nome}
@@ -238,7 +224,6 @@ const EmitirRelatorio = () => {
     },
   ];
 
-  
   const getTiposAcoes = async () => {
     setLoading(true);
     try {
@@ -256,50 +241,51 @@ const EmitirRelatorio = () => {
   }, []);
 
   // Função para agrupar dados pelo tipo de ação
-  const groupedData = data.reduce((acc:any, item:any) => {
-    const existingGroup = acc.find((group:any) => group.type === item.type);
+  const groupedData = data.reduce((acc: any, item: any) => {
+    const existingGroup = acc.find((group: any) => group.type === item.type);
     if (existingGroup) {
       existingGroup.children.push(item);
     } else {
       acc.push({
+        key: item.type, // Use the type as the key for the group
         type: item.type,
-        children: [item]
+        children: [item],
       });
     }
     return acc;
   }, []);
 
-  const columnsWithGrouping = [
+  const columns = [
     {
       title: "Tipo de Ação",
       dataIndex: "type",
       key: "type",
-      render: (record:any) => {
-        if (record.children) {
-          return {
-            children: record.type,
-            props: {
-              colSpan: 3,
-              className: 'group-header',
-            },
-          };
-        }
-        return record.type;
-      },
-    },
-    {
-      title: "Ano",
-      dataIndex: "year",
-      key: "year",
-      render: (text:any, record:any) => (record.children ? { props: { colSpan: 0 } } : text),
-    },
-    {
-      title: "Descrição",
-      dataIndex: "description",
-      key: "description",
-      render: ( text:any, record:any) => (record.children ? { props: { colSpan: 0 } } : text),
     },
   ];
+
+  const expandedRowRender = (record: any) => {
+    const innerColumns = [
+      {
+        title: "Ano",
+        dataIndex: "year",
+        key: "year",
+      },
+      {
+        title: "Descrição",
+        dataIndex: "description",
+        key: "description",
+      },
+    ];
+
+    return (
+      <Table
+        columns={innerColumns}
+        dataSource={record.children}
+        pagination={false}
+        rowKey={(childRecord) => childRecord.key}
+      />
+    );
+  };
 
   return (
     <div>
@@ -312,11 +298,12 @@ const EmitirRelatorio = () => {
         />
       </div>
       <Table
-        columns={columnsWithGrouping}
+        columns={columns}
         dataSource={groupedData}
         loading={loading}
         pagination={false}
-        rowKey={(record) => record.key || record.type}
+        expandedRowRender={expandedRowRender}
+        rowKey={(record) => record.key}
       />
     </div>
   );
