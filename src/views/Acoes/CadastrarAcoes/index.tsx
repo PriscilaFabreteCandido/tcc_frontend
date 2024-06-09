@@ -28,7 +28,6 @@ import { useEffect, useState } from "react";
 import { get, post, put } from "../../../api/axios";
 import { modalidades } from "../../../data/modalidades";
 
-
 export interface AcaoContextDataType {
   projetos: any[];
   eventos: any[];
@@ -64,9 +63,10 @@ export default function CadastrarAcoes() {
   const handleAddParticipant = () => {
     formParticipantes.validateFields().then((values) => {
       const newValue = {
-        funcao:  acaoContexData?.funcoes.find(x => x.id == values.funcao),
-        participante: acaoContexData?.funcoes.find(x => x.id == values.participante)
+        funcao: acaoContexData?.funcoes.find(x => x.id == values.funcao),
+        pessoa: acaoContexData?.pessoas.find(x => x.id == values.pessoa)
       }
+      console.log('newValue', newValue, values)
       setParticipants([...participants, newValue]);
       formParticipantes.resetFields();
       setIsModalVisible(false);
@@ -82,13 +82,15 @@ export default function CadastrarAcoes() {
   const columns = [
     {
       title: "Nome do Participante",
-      dataIndex: "nome",
-      key: "nome",
+      dataIndex: "pessoa",
+      key: "pessoa",
+      render: (record:any) => record.nome,
     },
     {
       title: "Função",
       dataIndex: "funcao",
       key: "funcao",
+      render: (record:any) => record.nome,
     },
     {
       title: "Ações",
@@ -99,7 +101,9 @@ export default function CadastrarAcoes() {
           onConfirm={() => handleDeleteParticipant(record)}
           okText="Sim"
           cancelText="Não"
-        ></Popconfirm>
+        >
+          <Button type="link">Excluir</Button>
+        </Popconfirm>
       ),
     },
   ];
@@ -146,6 +150,7 @@ export default function CadastrarAcoes() {
         cargaHoraria: values.cargaHoraria,
         participantesPdf: values.participantesPdf?.file,
         documentos: values.documentos?.fileList,
+        acoesPessoas: participants,
       };
 
       console.log("acaoToCreateOrEdit", acaoToCreateOrEdit);
@@ -428,7 +433,7 @@ export default function CadastrarAcoes() {
             <Form form={formParticipantes} layout="vertical">
               <Form.Item
                 label="Participante"
-                name="nome"
+                name="pessoa"
                 rules={[
                   {
                     required: true,

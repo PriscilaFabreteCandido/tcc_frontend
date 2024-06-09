@@ -28,51 +28,83 @@ const EmitirRelatorio = () => {
   const data = [
     {
       key: "1",
-      year: "2021",
-      type: "Curso",
-      description: "Curso de Java",
+      id: 1,
+      ano: "2021",
+      tipoAcao: "Curso",
+      descricao: "Curso de Java",
     },
     {
       key: "2",
-      year: "2022",
-      type: "Projeto",
-      description: "Projeto de Pesquisa",
+      id: 2,
+      ano: "2022",
+      tipoAcao: "Projeto",
+      descricao: "Projeto de Pesquisa",
     },
     {
       key: "3",
-      year: "2023",
-      type: "Palestra",
-      description: "Palestra sobre IA",
+      id: 3,
+      ano: "2023",
+      tipoAcao: "Palestra",
+      descricao: "Palestra sobre IA",
     },
     {
       key: "4",
-      year: "2023",
-      type: "Visita Guiada",
-      description: "Visita ao Museu",
+      id: 4,
+      ano: "2023",
+      tipoAcao: "Visita Guiada",
+      descricao: "Visita ao Museu",
     },
     {
       key: "5",
-      year: "2021",
-      type: "Curso",
-      description: "Curso de Python",
+      id: 5,
+      ano: "2021",
+      tipoAcao: "Curso",
+      descricao: "Curso de Python",
     },
     {
       key: "6",
-      year: "2022",
-      type: "Projeto",
-      description: "Projeto de Robótica",
+      id: 6,
+      ano: "2022",
+      tipoAcao: "Projeto",
+      descricao: "Projeto de Robótica",
     },
     {
       key: "7",
-      year: "2023",
-      type: "Palestra",
-      description: "Palestra sobre Segurança",
+      id: 7,
+      ano: "2023",
+      tipoAcao: "Palestra",
+      descricao: "Palestra sobre Segurança",
     },
     {
       key: "8",
-      year: "2023",
-      type: "Visita Guiada",
-      description: "Visita à Fábrica",
+      id: 8,
+      ano: "2023",
+      tipoAcao: "Visita Guiada",
+      descricao: "Visita à Fábrica",
+    },
+    {
+      key: "9",
+      id: 9,
+      ano: "2023",
+      tipoAcao: "Curso",
+      descricao: "Curso de Informática",
+      projetoId: 2,
+    },
+    {
+      key: "10",
+      id: 10,
+      ano: "2023",
+      tipoAcao: "Palestra",
+      descricao: "Curso de python",
+      projetoId: 2,
+    },
+    {
+      key: "10",
+      id: 10,
+      ano: "2023",
+      tipoAcao: "Curso",
+      descricao: "Curso de python",
+      projetoId: 2,
     },
   ];
 
@@ -154,7 +186,10 @@ const EmitirRelatorio = () => {
             <Row gutter={[16, 16]}>
               <Col span={8}>
                 <Form.Item name="ano" label="Ano">
-                  <Select placeholder="Selecione um período" style={{ width: "100%" }}>
+                  <Select
+                    placeholder="Selecione um período"
+                    style={{ width: "100%" }}
+                  >
                     {["2024", "2023", "2022", "2021"].map((option: string) => (
                       <Select.Option key={option} value={option}>
                         {option}
@@ -166,7 +201,10 @@ const EmitirRelatorio = () => {
 
               <Col span={8}>
                 <Form.Item name="tipoAcao" label="Tipo Ação">
-                  <Select placeholder="Selecione um tipo de ação" style={{ width: "100%" }}>
+                  <Select
+                    placeholder="Selecione um tipo de ação"
+                    style={{ width: "100%" }}
+                  >
                     {tiposAcoes.map((option: any) => (
                       <Select.Option key={option.id} value={option.id}>
                         {option.nome}
@@ -178,7 +216,10 @@ const EmitirRelatorio = () => {
 
               <Col span={8}>
                 <Form.Item name="projeto" label="Projeto">
-                  <Select placeholder="Selecione um projeto" style={{ width: "100%" }}>
+                  <Select
+                    placeholder="Selecione um projeto"
+                    style={{ width: "100%" }}
+                  >
                     {tiposAcoes.map((option: any) => (
                       <Select.Option key={option.id} value={option.id}>
                         {option.nome}
@@ -192,13 +233,21 @@ const EmitirRelatorio = () => {
             <Row gutter={[16, 16]}>
               <Col span={8}>
                 <Form.Item name="inicio" label="Data Início">
-                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" placeholder="Selecione a data de início" />
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    format="DD/MM/YYYY"
+                    placeholder="Selecione a data de início"
+                  />
                 </Form.Item>
               </Col>
 
               <Col span={8}>
                 <Form.Item name="termino" label="Data de Término">
-                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" placeholder="Selecione a data de término" />
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    format="DD/MM/YYYY"
+                    placeholder="Selecione a data de término"
+                  />
                 </Form.Item>
               </Col>
 
@@ -240,53 +289,88 @@ const EmitirRelatorio = () => {
     getTiposAcoes();
   }, []);
 
-  // Função para agrupar dados pelo tipo de ação
-  const groupedData = data.reduce((acc: any, item: any) => {
-    const existingGroup = acc.find((group: any) => group.type === item.type);
-    if (existingGroup) {
-      existingGroup.children.push(item);
-    } else {
-      acc.push({
-        key: item.type, // Use the type as the key for the group
-        type: item.type,
-        children: [item],
-      });
-    }
-    return acc;
-  }, []);
-
   const columns = [
     {
       title: "Tipo de Ação",
-      dataIndex: "type",
-      key: "type",
+      dataIndex: "nome",
+      key: "nome",
     },
   ];
 
-  const expandedRowRender = (record: any) => {
-    const innerColumns = [
+  const expandedRowRenderProjeto = (record:any) => {
+    const innerColumnsProjeto = [
       {
         title: "Ano",
-        dataIndex: "year",
-        key: "year",
+        dataIndex: "ano",
+        key: "ano",
       },
       {
         title: "Descrição",
-        dataIndex: "description",
-        key: "description",
+        dataIndex: "descricao",
+        key: "descricao",
       },
     ];
-
+  
+    // Filtrar os dados que são filhos do projeto
+    const filteredChildren = data.filter((item) => item.projetoId === record.id);
+  
     return (
       <Table
-        columns={innerColumns}
-        dataSource={record.children}
+        columns={innerColumnsProjeto}
+        dataSource={filteredChildren}
         pagination={false}
         rowKey={(childRecord) => childRecord.key}
       />
     );
   };
+  
+  const expandedRowRender = (record:any) => {
+    const innerColumns = [
+      {
+        title: "Ano",
+        dataIndex: "ano",
+        key: "ano",
+      },
+      {
+        title: "Descrição",
+        dataIndex: "descricao",
+        key: "descricao",
+      },
+    ];
 
+    const innerColumnsProjeto = [
+      {
+        title: "Descrição",
+        dataIndex: "descricao",
+        key: "descricao",
+      },
+    ];
+  
+    // Filtrar os dados pelo tipo de ação
+    const filteredData = data.filter((item) => item.tipoAcao === record.nome);
+    
+    return (
+      <>
+        {record.nome == "Projeto" ? (
+          <Table
+            columns={innerColumnsProjeto}
+            dataSource={filteredData}
+            pagination={false}
+            expandedRowRender={expandedRowRenderProjeto}
+            rowKey={(childRecord) => childRecord.key}
+          />
+        ) : (
+          <Table
+            columns={innerColumns}
+            dataSource={filteredData}
+            pagination={false}
+            rowKey={(childRecord) => childRecord.key}
+          />
+        )}
+      </>
+    );
+  };
+  
   return (
     <div>
       <div className="" style={{ flex: 1, marginBottom: "1rem" }}>
@@ -299,11 +383,11 @@ const EmitirRelatorio = () => {
       </div>
       <Table
         columns={columns}
-        dataSource={groupedData}
+        dataSource={tiposAcoes}
         loading={loading}
         pagination={false}
         expandedRowRender={expandedRowRender}
-        rowKey={(record) => record.key}
+        rowKey={(record) => record.id}
       />
     </div>
   );
