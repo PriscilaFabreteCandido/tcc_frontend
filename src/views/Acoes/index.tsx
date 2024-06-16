@@ -6,13 +6,16 @@ import {
   CollapseProps,
   Form,
   Input,
+  Popconfirm,
   Row,
   Select,
   Space,
   Table,
   Tooltip,
+  message,
 } from "antd";
 import {
+  DeleteOutlined,
   EditOutlined,
   FilterOutlined,
   InfoCircleOutlined,
@@ -22,7 +25,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router";
 import { ColumnsType } from "antd/es/table";
-import { get } from "../../api/axios";
+import { get, remove } from "../../api/axios";
 
 interface DataType {
   key: React.Key;
@@ -44,9 +47,7 @@ const Acoes: React.FC = () => {
   const [formFilter] = Form.useForm();
   const [data, setData] = useState<any[]>();
 
-  const onFilter = () => {
-
-  }
+  const onFilter = () => {};
 
   const items: CollapseProps["items"] = [
     {
@@ -71,7 +72,6 @@ const Acoes: React.FC = () => {
             className="flex gap-1"
             style={{ alignItems: "center", gap: "1rem" }}
           >
-
             <Button
               type="primary"
               onClick={() => {
@@ -104,16 +104,8 @@ const Acoes: React.FC = () => {
         </div>
       ),
       children: (
-        <div
-
-
-        >
-          <Form
-            form={formFilter}
-            layout="vertical"
-
-          >
-
+        <div>
+          <Form form={formFilter} layout="vertical">
             <Row gutter={[16, 16]}>
               <Col span={8}>
                 <Form.Item name="nome" label="Nome da Ação">
@@ -152,7 +144,6 @@ const Acoes: React.FC = () => {
               </Col>
             </Row>
 
-
             <Row gutter={[16, 16]}>
               <Col span={8}>
                 <Form.Item name="projeto" label="Periodo">
@@ -169,21 +160,25 @@ const Acoes: React.FC = () => {
                 </Form.Item>
               </Col>
 
-              <Col span={8}>
+              <Col span={8}></Col>
 
-              </Col>
-
-              <Col span={8}>
-
-              </Col>
+              <Col span={8}></Col>
             </Row>
-
-
           </Form>
         </div>
       ),
     },
   ];
+
+  const onDelete = async (id: number) => {
+    try {
+      await remove(`acoes/delete/${id}`);
+      setData(data?.filter((curso) => curso.id !== id));
+      message.success("Ação excluída com sucesso");
+    } catch (error) {
+      console.error("Erro ao excluir curso:", error);
+    }
+  };
 
   const columns: ColumnsType<DataType> = [
     {
@@ -191,27 +186,29 @@ const Acoes: React.FC = () => {
       dataIndex: "nome",
       key: "nome",
     },
-
+    {
+      title: "Tipo Ação",
+      dataIndex: "tipoAcao",
+      key: "tipoAcao",
+      render: (record: any) => record.nome,
+    },
     {
       title: "Instituição Atendida",
       dataIndex: "instituicaoAtendida",
       key: "instituicaoAtendida",
+      render: (record: any) => record.nome,
     },
     {
       title: "Número de Vagas",
-      dataIndex: "numeroVagas",
+      dataIndex: "qtdVagas",
       key: "numeroVagas",
-    },
-    {
-      title: "Duração",
-      dataIndex: "duracao",
-      key: "duracao",
     },
 
     {
       title: "Ações",
       key: "actions",
-      render: () => (
+      dataIndex: "id",
+      render: (record: any) => (
         <Space size="middle">
           <Tooltip title="Visualizar informações">
             <Button
@@ -223,28 +220,32 @@ const Acoes: React.FC = () => {
               className="ifes-btn-info"
             ></Button>
           </Tooltip>
-          <Tooltip title="Vincular Equipe de Execução">
-            <Button
-              type="primary"
-              icon={<UsergroupAddOutlined />}
-              onClick={() => {
-                navigate("/Ações/Vincular Equipe de Execução");
-              }}
-              className="ifes-btn-help"
-            ></Button>
-          </Tooltip>
           <Tooltip title="Editar">
             <Button
               className="ifes-btn-warning"
               icon={<EditOutlined />}
-              onClick={() => { }}
+              onClick={() => {}}
             ></Button>
+          </Tooltip>
+          <Tooltip title="Excluir">
+            <Popconfirm
+              title="Tem certeza que deseja excluir esta instituição?"
+              onConfirm={() => onDelete(record.id)}
+              okText="Sim"
+              cancelText="Cancelar"
+            >
+              <Button
+                className="ifes-btn-danger"
+                icon={<DeleteOutlined className="ifes-icon" />}
+                onClick={() => {}}
+              >
+              </Button>
+            </Popconfirm>
           </Tooltip>
         </Space>
       ),
     },
   ];
-
 
   const getContextData = async () => {
     setLoading(true);
@@ -272,7 +273,7 @@ const Acoes: React.FC = () => {
 
   useEffect(() => {
     getContextData();
-    getAcoes()
+    getAcoes();
   }, []);
 
   return (

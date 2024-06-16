@@ -36,7 +36,7 @@ export interface ActionType {
   icone: string; // Novo campo
 }
 
-const iconOptions = [
+export const iconOptions = [
   { label: "Curso", value: "BookOutlined", icon: <BookOutlined /> },
   { label: "Visita Guiada", value: "CalendarOutlined", icon: <CalendarOutlined /> },
   { label: "Projeto", value: "SolutionOutlined", icon: <SolutionOutlined /> },

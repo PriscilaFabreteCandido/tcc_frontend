@@ -165,7 +165,7 @@ export default function CadastrarAcoes() {
         message.success("Ação editada com sucesso");
       }
   
-      navigate("/Consultar Ações");
+      navigate("/Ações/Emitir Relatório");
     } catch (error) {
       console.error("Erro ao cadastrar/editar ação:", error);
     }
@@ -246,7 +246,7 @@ export default function CadastrarAcoes() {
               <Col span={14}>
                 <Form.Item
                   label="Nome da Ação"
-                  name="nomeAcao"
+                  name="nome"
                   rules={[{ required: true, message: "Campo obrigatório" }]}
                 >
                   <Input />
