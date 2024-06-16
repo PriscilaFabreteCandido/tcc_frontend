@@ -41,29 +41,36 @@ export interface AcaoContextDataType {
 
 export default function CadastrarAcoes() {
   const [form] = Form.useForm();
+  const [stepValues, setStepValues] = useState({});
+
   const [formParticipantes] = Form.useForm();
   const [selectedTipoAcao, setSelectedTipoAcao] = useState<any>();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
   const [acaoContexData, setAcaoContexData] = useState<AcaoContextDataType>();
   const [loading, setLoading] = useState(false);
-  const [tipoAcoes] = useState<any[]>([
-    { id: 1, nome: "Curso" },
-    { id: 2, nome: "Projeto" },
-    { id: 3, nome: "Evento" },
-  ]);
+  const [tipoAcoes, setTipoAcoes] = useState<any[]>([]);
   const navigate = useNavigate();
 
   const [current, setCurrent] = useState(0);
 
-  const next = () => {
-    setCurrent(current + 1);
+  const next = async () => {
+    try {
+      await form.validateFields();
+      const currentValues = form.getFieldsValue();
+      setStepValues({ ...stepValues, ...currentValues });
+      setCurrent(current + 1);
+    } catch (error) {
+      console.error('Erro ao validar campos:', error);
+    }
   };
-
+  
   const prev = () => {
+    const previousValues = steps[current - 1].content.props.form.getFieldsValue();
+    form.setFieldsValue({ ...previousValues });
     setCurrent(current - 1);
   };
-
+  
   const handleAddParticipant = () => {
     formParticipantes.validateFields().then((values) => {
       const newValue = {
@@ -117,6 +124,7 @@ export default function CadastrarAcoes() {
     try {
       const response: AcaoContextDataType = await get("acoes/contextData");
       setAcaoContexData(response);
+      setTipoAcoes(response.tipoAcoes)
     } catch (error) {
       console.error("Erro ao obter cursos:", error);
     } finally {
@@ -131,111 +139,101 @@ export default function CadastrarAcoes() {
   const handleCadastrar = async () => {
     try {
       await form.validateFields();
-      const values = form.getFieldsValue();
-      console.log('values',values)
+      const currentValues = form.getFieldsValue();
+      const allValues = { ...stepValues, ...currentValues };
+      console.log('allValues', allValues,participants);
+      
       const acaoToCreateOrEdit = {
-        nome: values.nomeAcao,
-        tipoAcao: values.tipoAcao,
-        projeto: values.projeto,
-        evento: values.evento,
-        turma: values.turma,
-        periodoSemestre: values.periodoSemestre,
-        modalidade: values.modalidade,
-        inicio: values.inicio,
-        fim: values.fim,
-        numeroProcesso: values.numeroProcesso,
-        publicoAlvo: values.publicoAlvo,
-        dataInicio: values.dataInicio,
-        dataTermino: values.dataTermino,
-        instituicaoAtendida: values.instituicaoAtendida,
-        ano: values.ano,
-        enderecoCep: values.enderecoCep,
-        qtdeParticipantes: values.qtdeParticipantes,
-        cargaHoraria: values.cargaHoraria,
-        participantesPdf: values.participantesPdf?.file,
-        documentos: values.documentos?.fileList,
+        ...allValues,
+        tipoAcao: {
+          id: allValues.tipoAcao
+        },
+        instituicaoAtendida: {
+          id: allValues.instituicaoAtendida
+        },
+        participantesPdf: allValues.participantesPdf?.file,
+        documentos: allValues.documentos?.fileList,
         acoesPessoas: participants,
       };
-
+  
       console.log("acaoToCreateOrEdit", acaoToCreateOrEdit);
-      if (!values.id) {
+      if (!allValues.id) {
         await post("acoes/create", acaoToCreateOrEdit);
         message.success("Ação criada com sucesso");
-        // Adicionar lógica adicional se necessário, como atualizar a lista de ações
       } else {
-        await put(`acoes/update/${values.id}`, acaoToCreateOrEdit);
+        await put(`acoes/update/${allValues.id}`, acaoToCreateOrEdit);
         message.success("Ação editada com sucesso");
-        // Adicionar lógica adicional se necessário, como atualizar a lista de ações
       }
-
+  
       navigate("/Consultar Ações");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro ao cadastrar/editar ação:", error);
     }
   };
-
+  
   const steps = [
     {
       title: "Equipe de Execução",
       content: (
         <div style={{ marginTop: "2rem" }}>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                label="Tipo Ação"
-                name="tipoAcao"
-                rules={[
-                  {
-                    required: true,
-                    message: "Por favor, selecione um projeto!",
-                  },
-                ]}
-              >
-                <Select
-                  placeholder="selecione"
-                  onChange={(e) => {
-                    console.log(tipoAcoes.find((x) => x.id == e));
-                    setSelectedTipoAcao(tipoAcoes.find((x) => x.id == e));
-                  }}
+          <Form form={form} layout="vertical" initialValues={stepValues}>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  label="Tipo Ação"
+                  name="tipoAcao"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Por favor, selecione um projeto!",
+                    },
+                  ]}
                 >
-                  {tipoAcoes.map((option) => (
-                    <Select.Option key={option.id} value={option.id}>
-                      {option.nome}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="Projeto" name="projeto">
-                <Select
-                  placeholder="Selecione um projeto"
-                  disabled={selectedTipoAcao == "Projeto"}
-                >
-                  {acaoContexData?.projetos?.map((option) => (
-                    <Select.Option key={option.id} value={option.nome}>
-                      {option.nome}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col span={8}>
-              <Form.Item label="Evento" name="evento">
-                <TreeSelect
-                  disabled={selectedTipoAcao == "Projeto"}
-                  showSearch
-                  style={{ width: "100%" }}
-                  dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
-                  placeholder="Selecione um evento"
-                  allowClear
-                  treeDefaultExpandAll
-                  treeData={acaoContexData?.eventos}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+                  <Select
+                    placeholder="selecione"
+                    onChange={(e) => {
+                      console.log(tipoAcoes.find((x) => x.id == e));
+                      setSelectedTipoAcao(tipoAcoes.find((x) => x.id == e));
+                    }}
+                  >
+                    {tipoAcoes.map((option) => (
+                      <Select.Option key={option.id} value={option.id}>
+                        {option.nome}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item label="Projeto" name="projeto">
+                  <Select
+                    placeholder="Selecione um projeto"
+                    disabled={selectedTipoAcao == "Projeto"}
+                  >
+                    {acaoContexData?.projetos?.map((option) => (
+                      <Select.Option key={option.id} value={option.nome}>
+                        {option.nome}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item label="Evento" name="evento">
+                  <TreeSelect
+                    disabled={selectedTipoAcao == "Projeto"}
+                    showSearch
+                    style={{ width: "100%" }}
+                    dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
+                    placeholder="Selecione um evento"
+                    allowClear
+                    treeDefaultExpandAll
+                    treeData={acaoContexData?.eventos}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
         </div>
       ),
     },
@@ -243,237 +241,228 @@ export default function CadastrarAcoes() {
       title: "Informações Gerais",
       content: (
         <div style={{ marginTop: "2rem" }}>
-          <Row gutter={16}>
-            <Col span={14}>
-              <Form.Item
-                label="Nome da Ação"
-                name="nomeAcao"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={10}>
-              <Form.Item
-                label="Público Alvo"
-                name="publicoAlvo"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                label="Data Início"
-                name="dataInicio"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label="Data Término"
-                name="dataTermino"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label="Instituição Atendida"
-                name="instituicaoAtendida"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Select>
-                  {acaoContexData?.instituicoes?.map((option) => (
-                    <Select.Option key={option.value} value={option.id}>
-                      {option.nome}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {selectedTipoAcao?.nome == "Curso" && (
-            <>
-              <Row gutter={16}>
-                <Col span={8}>
-                  <Form.Item label="Turma" name="turma" required>
-                    <Input />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item label="Período Semestre" name="periodoSemestre">
-                    <Select placeholder="Selecione um projeto">
-                      {acaoContexData?.periodos?.map((option) => (
-                        <Select.Option key={option.id} value={option.nome}>
-                          {option.periodo == "-"
-                            ? option.ano
-                            : option.ano + "/" + option.periodo}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item label="Modalidade" name="modalidade" required>
-                    <Select placeholder="Selecione um projeto">
-                      {modalidades?.map((option) => (
-                        <Select.Option key={option} value={option}>
-                          {option}
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Row gutter={16}>
-                <Col span={8}>
-                  <Form.Item
-                    label="Horário de Início"
-                    name="inicio"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Por favor, insira o horário de início!",
-                      },
-                    ]}
-                  >
-                    <TimePicker
-                      format="HH:mm"
-                      placeholder="00:00"
-                      style={{ width: "100%" }}
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    label="Horário de Término"
-                    name="fim"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Por favor, insira o horário de término!",
-                      },
-                    ]}
-                  >
-                    <TimePicker
-                      format="HH:mm"
-                      placeholder="00:00"
-                      style={{ width: "100%" }}
-                    />
-                  </Form.Item>
-                </Col>
-
-                <Col span={8}>
-                  <Form.Item
-                    label="Número do Processo"
-                    name="numeroProcesso"
-                    required
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </>
-          )}
-
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                label="Quantidade de Vagas"
-                name="qtdVagas"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input type="number"></Input>
-              </Form.Item>
-            </Col>
-
-            <Col span={8}>
-              <Form.Item
-                label="Quantidade de Participantes"
-                name="qtdParticipantes"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input type="number"></Input>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Button
-            type="primary"
-            icon={<UserAddOutlined />}
-            onClick={() => setIsModalVisible(true)}
-          >
-            Adicionar Participante
-          </Button>
-
-          <Table
-            dataSource={participants}
-            columns={columns}
-            rowKey={(record) => record?.nome}
-            style={{ marginTop: "1rem" }}
-          />
-
-          <Modal
-            title="Adicionar Participante"
-            visible={isModalVisible}
-            onCancel={() => setIsModalVisible(false)}
-            onOk={handleAddParticipant}
-          >
-            <Form form={formParticipantes} layout="vertical">
-              <Form.Item
-                label="Participante"
-                name="pessoa"
-                rules={[
-                  {
-                    required: true,
-                    message: "Por favor, insira o nome do participante!",
-                  },
-                ]}
-              >
-                <Select
-                  onChange={(e) => {
-                    setSelectedTipoAcao(e);
-                  }}
+          <Form form={form} layout="vertical" initialValues={stepValues}>
+            <Row gutter={16}>
+              <Col span={14}>
+                <Form.Item
+                  label="Nome da Ação"
+                  name="nomeAcao"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
                 >
-                  {acaoContexData?.pessoas?.map((option) => (
-                    <Select.Option key={option.value} value={option.id}>
-                      {option.nome}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Form.Item
-                label="Função"
-                name="funcao"
-                rules={[
-                  { required: true, message: "Por favor, insira a função!" },
-                ]}
-              >
-                <Select
-                  onChange={(e) => {
-                    setSelectedTipoAcao(e);
-                  }}
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col span={10}>
+                <Form.Item
+                  label="Público Alvo"
+                  name="publicoAlvo"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
                 >
-                  {acaoContexData?.funcoes?.map((option) => (
-                    <Select.Option key={option.value} value={option.id}>
-                      {option.nome}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Form>
-          </Modal>
+                  <Input />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  label="Data Início"
+                  name="dtInicio"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  label="Data Término"
+                  name="dtTermino"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  label="Instituição Atendida"
+                  name="instituicaoAtendida"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <Select>
+                    {acaoContexData?.instituicoes?.map((option) => (
+                      <Select.Option key={option.value} value={option.id}>
+                        {option.nome}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+            {selectedTipoAcao?.nome == "Curso" && (
+              <>
+                <Row gutter={16}>
+                  <Col span={8}>
+                    <Form.Item label="Turma" name="turma" required>
+                      <Input />
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item label="Período Semestre" name="periodoSemestre">
+                      <Select placeholder="Selecione um projeto">
+                        {acaoContexData?.periodos?.map((option) => (
+                          <Select.Option key={option.id} value={option.nome}>
+                            {option.periodo == "-"
+                              ? option.ano
+                              : option.ano + "/" + option.periodo}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item label="Modalidade" name="modalidade" required>
+                      <Select placeholder="Selecione um projeto">
+                        {modalidades?.map((option) => (
+                          <Select.Option key={option} value={option}>
+                            {option}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row gutter={16}>
+                  <Col span={8}>
+                    <Form.Item
+                      label="Horário de Início"
+                      name="inicio"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Por favor, insira o horário de início!",
+                        },
+                      ]}
+                    >
+                      <TimePicker
+                        format="HH:mm"
+                        placeholder="00:00"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item
+                      label="Horário de Término"
+                      name="fim"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Por favor, insira o horário de término!",
+                        },
+                      ]}
+                    >
+                      <TimePicker
+                        format="HH:mm"
+                        placeholder="00:00"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={8}>
+                    <Form.Item
+                      label="Número do Processo"
+                      name="numeroProcesso"
+                      required
+                    >
+                      <Input />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </>
+            )}
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  label="Quantidade de Vagas"
+                  name="qtdVagas"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <Input type="number"></Input>
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  label="Quantidade de Participantes"
+                  name="qtdParticipantes"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <Input type="number"></Input>
+                </Form.Item>
+              </Col>
+            </Row>
+            <Button
+              type="primary"
+              icon={<UserAddOutlined />}
+              onClick={() => setIsModalVisible(true)}
+            >
+              Adicionar Participante
+            </Button>
+            <Table
+              dataSource={participants}
+              columns={columns}
+              rowKey={(record) => record?.nome}
+              style={{ marginTop: "1rem" }}
+            />
+            <Modal
+              title="Adicionar Participante"
+              visible={isModalVisible}
+              onCancel={() => setIsModalVisible(false)}
+              onOk={handleAddParticipant}
+            >
+              <Form form={formParticipantes} layout="vertical">
+                <Form.Item
+                  label="Participante"
+                  name="pessoa"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Por favor, insira o nome do participante!",
+                    },
+                  ]}
+                >
+                  <Select
+                    onChange={(e) => {
+                      setSelectedTipoAcao(e);
+                    }}
+                  >
+                    {acaoContexData?.pessoas?.map((option) => (
+                      <Select.Option key={option.value} value={option.id}>
+                        {option.nome}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+                <Form.Item
+                  label="Função"
+                  name="funcao"
+                  rules={[
+                    { required: true, message: "Por favor, insira a função!" },
+                  ]}
+                >
+                  <Select
+                    onChange={(e) => {
+                      setSelectedTipoAcao(e);
+                    }}
+                  >
+                    {acaoContexData?.funcoes?.map((option) => (
+                      <Select.Option key={option.value} value={option.id}>
+                        {option.nome}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Form>
+            </Modal>
+          </Form>
         </div>
       ),
     },
@@ -481,67 +470,66 @@ export default function CadastrarAcoes() {
       title: "Endereço de Realização",
       content: (
         <div style={{ marginTop: "2rem" }}>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                label="CEP"
-                name="cep"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label="Endereço"
-                name="endereco"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-
-            <Col span={8}>
-              <Form.Item
-                label="Rua"
-                name="rua"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                label="UF"
-                name="uf"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label="Cidade"
-                name="cidade"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-
-            <Col span={8}>
-              <Form.Item
-                label="Número"
-                name="numero"
-                rules={[{ required: true, message: "Campo obrigatório" }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form form={form} layout="vertical" initialValues={stepValues}>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  label="CEP"
+                  name="cep"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <Input onChange={(e:any) => buscarEnderecoPorCEP(e.target.value)}/>
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  label="Endereço"
+                  name="endereco"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  label="Rua"
+                  name="rua"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item
+                  label="UF"
+                  name="uf"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  label="Cidade"
+                  name="cidade"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item
+                  label="Número"
+                  name="numero"
+                  rules={[{ required: true, message: "Campo obrigatório" }]}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
         </div>
       ),
     },
@@ -549,34 +537,35 @@ export default function CadastrarAcoes() {
       title: "Documentos",
       content: (
         <div style={{ marginTop: "2rem" }}>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="Participantes (Anexar PDF)"
-                name="participantesPdf"
-              >
-                <Upload>
-                  <Button icon={<UploadOutlined />}>Upload</Button>
-                </Upload>
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item
-                label="Documentos (Anexar PDF/Excel/Doc)"
-                name="documentos"
-              >
-                <Upload>
-                  <Button icon={<UploadOutlined />}>Upload</Button>
-                </Upload>
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form form={form} layout="vertical" initialValues={stepValues}>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Participantes (Anexar PDF)"
+                  name="participantesPdf"
+                >
+                  <Upload>
+                    <Button icon={<UploadOutlined />}>Upload</Button>
+                  </Upload>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Documentos (Anexar PDF/Excel/Doc)"
+                  name="documentos"
+                >
+                  <Upload>
+                    <Button icon={<UploadOutlined />}>Upload</Button>
+                  </Upload>
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
         </div>
       ),
     },
   ];
-
+  
   const buscarEnderecoPorCEP = async (cep: string) => {
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
