@@ -133,7 +133,7 @@ const CadastrarInstituicao = () => {
                   },
                 ]}
               >
-                <Input placeholder="00000-00" onChange={(e) => buscarEnderecoPorCEP(e.target.value)} />
+                <Input placeholder="0000000" onChange={(e) => buscarEnderecoPorCEP(e.target.value)} />
               </Form.Item>
             </div>
             <div style={{ flex: 1 }}>

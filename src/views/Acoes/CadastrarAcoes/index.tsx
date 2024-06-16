@@ -47,7 +47,11 @@ export default function CadastrarAcoes() {
   const [participants, setParticipants] = useState<any[]>([]);
   const [acaoContexData, setAcaoContexData] = useState<AcaoContextDataType>();
   const [loading, setLoading] = useState(false);
-  const [tipoAcoes, ] = useState<any[]>([{id: 1, nome: "Curso" }, {id: 2, nome: "Projeto",}, {id: 3, nome: "Evento",}])
+  const [tipoAcoes] = useState<any[]>([
+    { id: 1, nome: "Curso" },
+    { id: 2, nome: "Projeto" },
+    { id: 3, nome: "Evento" },
+  ]);
   const navigate = useNavigate();
 
   const [current, setCurrent] = useState(0);
@@ -63,17 +67,17 @@ export default function CadastrarAcoes() {
   const handleAddParticipant = () => {
     formParticipantes.validateFields().then((values) => {
       const newValue = {
-        funcao: acaoContexData?.funcoes.find(x => x.id == values.funcao),
-        pessoa: acaoContexData?.pessoas.find(x => x.id == values.pessoa)
-      }
-      console.log('newValue', newValue, values)
+        funcao: acaoContexData?.funcoes.find((x) => x.id == values.funcao),
+        pessoa: acaoContexData?.pessoas.find((x) => x.id == values.pessoa),
+      };
+      console.log("newValue", newValue, values);
       setParticipants([...participants, newValue]);
       formParticipantes.resetFields();
       setIsModalVisible(false);
     });
   };
 
-  const handleDeleteParticipant = (record:any) => {
+  const handleDeleteParticipant = (record: any) => {
     setParticipants(
       participants.filter((participant) => participant.nome !== record.nome)
     );
@@ -84,18 +88,18 @@ export default function CadastrarAcoes() {
       title: "Nome do Participante",
       dataIndex: "pessoa",
       key: "pessoa",
-      render: (record:any) => record.nome,
+      render: (record: any) => record.nome,
     },
     {
       title: "Função",
       dataIndex: "funcao",
       key: "funcao",
-      render: (record:any) => record.nome,
+      render: (record: any) => record.nome,
     },
     {
       title: "Ações",
       key: "acoes",
-      render: (record:any) => (
+      render: (record: any) => (
         <Popconfirm
           title="Tem certeza que deseja excluir?"
           onConfirm={() => handleDeleteParticipant(record)}
@@ -128,7 +132,7 @@ export default function CadastrarAcoes() {
     try {
       await form.validateFields();
       const values = form.getFieldsValue();
-
+      console.log('values',values)
       const acaoToCreateOrEdit = {
         nome: values.nomeAcao,
         tipoAcao: values.tipoAcao,
@@ -190,12 +194,8 @@ export default function CadastrarAcoes() {
                 <Select
                   placeholder="selecione"
                   onChange={(e) => {
-                    console.log(
-                      tipoAcoes.find((x) => x.id == e)
-                    );
-                    setSelectedTipoAcao(
-                      tipoAcoes.find((x) => x.id == e)
-                    );
+                    console.log(tipoAcoes.find((x) => x.id == e));
+                    setSelectedTipoAcao(tipoAcoes.find((x) => x.id == e));
                   }}
                 >
                   {tipoAcoes.map((option) => (
@@ -388,7 +388,7 @@ export default function CadastrarAcoes() {
           )}
 
           <Row gutter={16}>
-          <Col span={8}>
+            <Col span={8}>
               <Form.Item
                 label="Quantidade de Vagas"
                 name="qtdVagas"
@@ -397,7 +397,7 @@ export default function CadastrarAcoes() {
                 <Input type="number"></Input>
               </Form.Item>
             </Col>
-            
+
             <Col span={8}>
               <Form.Item
                 label="Quantidade de Participantes"
@@ -577,6 +577,27 @@ export default function CadastrarAcoes() {
     },
   ];
 
+  const buscarEnderecoPorCEP = async (cep: string) => {
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        message.error("CEP não encontrado");
+        return;
+      }
+
+      form.setFieldsValue({
+        uf: data.uf,
+        endereco: data.bairro,
+        rua: data.logradouro,
+        cidade: data.localidade,
+      });
+    } catch (error) {
+      console.error("Erro ao buscar endereço pelo CEP:", error);
+    }
+  };
+
   return (
     <Spin spinning={loading}>
       <h4 style={{ paddingBottom: "1rem" }} className="poppins-bold">
@@ -587,19 +608,26 @@ export default function CadastrarAcoes() {
       <Form form={form} layout="vertical">
         <div className="steps-content">{steps[current].content}</div>
         <div className="steps-action" style={{ marginTop: 24 }}>
+          {current > 0 && (
+            <Button style={{ margin: "0 8px" }} onClick={() => prev()}>
+              Anterior
+            </Button>
+          )}
           {current < steps.length - 1 && (
-            <Button type="primary" onClick={() => next()}>
+            <Button
+              type="primary"
+              onClick={() => {
+                const values = form.getFieldsValue();
+                console.log("values", values);
+                next();
+              }}
+            >
               Próximo
             </Button>
           )}
           {current === steps.length - 1 && (
             <Button type="primary" onClick={() => handleCadastrar()}>
               Cadastrar <PlusOutlined />
-            </Button>
-          )}
-          {current > 0 && (
-            <Button style={{ margin: "0 8px" }} onClick={() => prev()}>
-              Anterior
             </Button>
           )}
         </div>
