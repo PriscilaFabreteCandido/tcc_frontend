@@ -9,8 +9,22 @@ import {
   message,
   Popconfirm,
   Space,
+  Select,
 } from "antd";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  BookOutlined,
+  CalendarOutlined,
+  TeamOutlined,
+  ToolOutlined,
+  ExperimentOutlined,
+  SolutionOutlined,
+  TrophyOutlined,
+  FieldTimeOutlined,
+  HomeOutlined,
+} from "@ant-design/icons";
 import { CardFooter } from "../../../components/CardFooter";
 import { ColumnsType } from "antd/es/table";
 import { get, post, put, remove } from "../../../api/axios";
@@ -19,15 +33,21 @@ export interface ActionType {
   key: React.Key;
   id: number;
   nome: string;
+  icone: string; // Novo campo
 }
 
-// const TiposAcoesOptions = [
-//   { id: 1, descricao: "Curso" },
-//   { id: 2, descricao: "Apoio Técnico" },
-//   { id: 3, descricao: "Visita Guiada" },
-//   { id: 4, descricao: "Palestra" },
-//   { id: 4, descricao: "Evento" },
-// ];
+const iconOptions = [
+  { label: "Curso", value: "BookOutlined", icon: <BookOutlined /> },
+  { label: "Visita Guiada", value: "CalendarOutlined", icon: <CalendarOutlined /> },
+  { label: "Projeto", value: "SolutionOutlined", icon: <SolutionOutlined /> },
+  { label: "Evento", value: "TrophyOutlined", icon: <TrophyOutlined /> },
+  { label: "Apoio Técnico", value: "ToolOutlined", icon: <ToolOutlined /> },
+  { label: "Pesquisa", value: "ExperimentOutlined", icon: <ExperimentOutlined /> },
+  { label: "Reunião", value: "TeamOutlined", icon: <TeamOutlined /> },
+  { label: "Horário", value: "FieldTimeOutlined", icon: <FieldTimeOutlined /> },
+  { label: "Visita", value: "HomeOutlined", icon: <HomeOutlined /> },
+];
+
 const TiposAcoes: React.FC = () => {
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [tipoAcaoToEdit, setTipoAcaoToEdit] = useState<ActionType | null>(null);
@@ -45,14 +65,13 @@ const TiposAcoes: React.FC = () => {
     setIsOpenModal(false);
   };
 
-
   const getTiposAcoes = async () => {
     setLoading(true);
     try {
       const response: ActionType[] = await get("tipoAcoes");
       setTiposAcoes(response);
     } catch (error) {
-      console.error("Erro ao obter instituições:", error);
+      console.error("Erro ao obter tipos de ações:", error);
     } finally {
       setLoading(false);
     }
@@ -69,6 +88,7 @@ const TiposAcoes: React.FC = () => {
 
       const tipoAcaoData = {
         nome: values.nome,
+        icone: values.icone, // Novo campo
         id: tipoAcaoToEdit ? tipoAcaoToEdit.id : null,
       };
 
@@ -99,9 +119,9 @@ const TiposAcoes: React.FC = () => {
     try {
       await remove(`tipoAcoes/delete/${id}`);
       getTiposAcoes();
-      message.success("Instituição excluída com sucesso");
+      message.success("Tipo de ação excluído com sucesso");
     } catch (error) {
-      console.error("Erro ao excluir instituição:", error);
+      console.error("Erro ao excluir tipo de ação:", error);
     }
   };
 
@@ -109,6 +129,14 @@ const TiposAcoes: React.FC = () => {
     {
       title: "Nome",
       dataIndex: "nome",
+    },
+    {
+      title: "Ícone",
+      dataIndex: "icone",
+      render: (text) => {
+        const icon = iconOptions.find((option) => option.value === text)?.icon;
+        return icon ? <span>{icon}</span> : null;
+      },
     },
     {
       title: "Ações",
@@ -122,7 +150,8 @@ const TiposAcoes: React.FC = () => {
               onClick={() => {
                 setTipoAcaoToEdit(record);
                 form.setFieldsValue({
-                  nome: record.nome
+                  nome: record.nome,
+                  icone: record.icone, // Novo campo
                 });
                 setIsOpenModal(true);
               }}
@@ -186,6 +215,24 @@ const TiposAcoes: React.FC = () => {
             ]}
           >
             <Input />
+          </Form.Item>
+          <Form.Item
+            name="icone"
+            label="Ícone"
+            rules={[
+              { required: true, message: "Por favor, selecione um ícone para o tipo de ação!" },
+            ]}
+          >
+            <Select
+              options={iconOptions.map((option) => ({
+                label: (
+                  <span>
+                    {option.icon} {option.label}
+                  </span>
+                ),
+                value: option.value,
+              }))}
+            />
           </Form.Item>
         </Form>
       </Modal>
