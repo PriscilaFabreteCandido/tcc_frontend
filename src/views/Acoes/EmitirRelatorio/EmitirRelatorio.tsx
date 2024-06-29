@@ -12,6 +12,7 @@ import {
   Popconfirm,
   Space,
   Tooltip,
+  Modal,
 } from "antd";
 import {
   DeleteOutlined,
@@ -25,13 +26,17 @@ import {
 import { get } from "../../../api/axios";
 import { iconOptions } from "../../Cadastros/TipoAcoes";
 import { AcaoContextDataType } from "../CadastrarAcoes";
+import DetalhesAcao from "../DetalhesAcao/DetalhesAcao";
+import { useNavigate } from "react-router";
 
 const EmitirRelatorio = () => {
   const [formFilter] = Form.useForm();
   const [tipoAcoes, setTipoAcoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [contextData, setContextData] = useState();
-
+  const [isModalVisibleInfo, setIsModalVisibleInfo] = useState(false);
+  const navigate = useNavigate();
+  
   // Dados mockados
   const data = [
     {
@@ -346,6 +351,14 @@ const EmitirRelatorio = () => {
     );
   };
 
+  const openModalInfo = () => {
+    setIsModalVisibleInfo(true);
+  };
+
+  const handleCancelInfo = () => {
+    setIsModalVisibleInfo(false);
+  };
+
   const innerColumns = [
     {
       title: "Ano",
@@ -368,7 +381,7 @@ const EmitirRelatorio = () => {
               type="primary"
               icon={<InfoCircleOutlined />}
               onClick={() => {
-                navigate("/Ações/Vincular Equipe de Execução");
+                openModalInfo(record);
               }}
               className="ifes-btn-info"
             ></Button>
@@ -377,7 +390,7 @@ const EmitirRelatorio = () => {
             <Button
               className="ifes-btn-warning"
               icon={<EditOutlined />}
-              onClick={() => {}}
+              onClick={() => {navigate("/Ações/Editar Ação",{ state: { id: record } });}}
             ></Button>
           </Tooltip>
           <Tooltip title="Excluir">
@@ -391,8 +404,7 @@ const EmitirRelatorio = () => {
                 className="ifes-btn-danger"
                 icon={<DeleteOutlined className="ifes-icon" />}
                 onClick={() => {}}
-              >
-              </Button>
+              ></Button>
             </Popconfirm>
           </Tooltip>
         </Space>
@@ -401,8 +413,6 @@ const EmitirRelatorio = () => {
   ];
 
   const expandedRowRender = (record: any) => {
-    
-
     const innerColumnsProjeto = [
       {
         title: "Descrição",
@@ -454,6 +464,17 @@ const EmitirRelatorio = () => {
         expandedRowRender={expandedRowRender}
         rowKey={(record) => record.id}
       />
+
+      <Modal
+        title=""
+        width={"90%"}
+        
+        visible={isModalVisibleInfo}
+        onOk={handleCancelInfo}
+        onCancel={handleCancelInfo}
+      >
+        <DetalhesAcao id={""} />
+      </Modal>
     </div>
   );
 };

@@ -66,7 +66,7 @@ function RootLayout() {
 
       <Layout >
         <Header
-          style={{ padding: "0 2rem", background: colors.primary }}
+          style={{ padding: "0 2rem", background: colors.secundary }}
           className="shadow"
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -85,12 +85,12 @@ function RootLayout() {
               }}
             />
             <Space style={{display: "flex", alignItems: "center", gap: 15}}>
-              <Avatar style={{ backgroundColor: '#fff' }} icon={<UserOutlined style={{color: colors.primary}}/>} />
+              <Avatar style={{ backgroundColor: '#fff' }} icon={<UserOutlined style={{color: colors.secundary}}/>} />
 
               <span style={{ color: 'white' }}>{userName}</span>
 
               <Dropdown overlay={menu} trigger={['click']} >
-                <Avatar style={{ backgroundColor: colors.primary }} icon={<AiOutlineDown />} />
+                <Avatar style={{ backgroundColor: colors.secundary }} icon={<AiOutlineDown />} />
               </Dropdown>
             </Space>
           </div>

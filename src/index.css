@@ -152,3 +152,7 @@ Button {
 .poppins-bold{
   font-family: "Poppins-Bold";
 }
+
+.color-primary{
+  color: #f9750a !important;
+}

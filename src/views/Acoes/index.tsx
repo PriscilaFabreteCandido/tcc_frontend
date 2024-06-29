@@ -215,7 +215,7 @@ const Acoes: React.FC = () => {
               type="primary"
               icon={<InfoCircleOutlined />}
               onClick={() => {
-                navigate("/Ações/Vincular Equipe de Execução");
+               
               }}
               className="ifes-btn-info"
             ></Button>
@@ -224,7 +224,10 @@ const Acoes: React.FC = () => {
             <Button
               className="ifes-btn-warning"
               icon={<EditOutlined />}
-              onClick={() => {}}
+
+              onClick={() => {
+                navigate("/Ações/Editar Ação",{ state: { id: record } });
+              }}
             ></Button>
           </Tooltip>
           <Tooltip title="Excluir">

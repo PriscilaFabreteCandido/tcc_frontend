@@ -23,7 +23,7 @@ import {
   UploadOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
 import { get, post, put } from "../../../api/axios";
 import { modalidades } from "../../../data/modalidades";
@@ -42,7 +42,6 @@ export interface AcaoContextDataType {
 export default function CadastrarAcoes() {
   const [form] = Form.useForm();
   const [stepValues, setStepValues] = useState({});
-
   const [formParticipantes] = Form.useForm();
   const [selectedTipoAcao, setSelectedTipoAcao] = useState<any>();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -51,6 +50,8 @@ export default function CadastrarAcoes() {
   const [loading, setLoading] = useState(false);
   const [tipoAcoes, setTipoAcoes] = useState<any[]>([]);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { id } = location.state || {}; // Use useParams to get the ID from the URL
 
   const [current, setCurrent] = useState(0);
 
@@ -61,16 +62,16 @@ export default function CadastrarAcoes() {
       setStepValues({ ...stepValues, ...currentValues });
       setCurrent(current + 1);
     } catch (error) {
-      console.error('Erro ao validar campos:', error);
+      console.error("Erro ao validar campos:", error);
     }
   };
-  
+
   const prev = () => {
     const previousValues = steps[current - 1].content.props.form.getFieldsValue();
     form.setFieldsValue({ ...previousValues });
     setCurrent(current - 1);
   };
-  
+
   const handleAddParticipant = () => {
     formParticipantes.validateFields().then((values) => {
       const newValue = {
@@ -124,7 +125,7 @@ export default function CadastrarAcoes() {
     try {
       const response: AcaoContextDataType = await get("acoes/contextData");
       setAcaoContexData(response);
-      setTipoAcoes(response.tipoAcoes)
+      setTipoAcoes(response.tipoAcoes);
     } catch (error) {
       console.error("Erro ao obter cursos:", error);
     } finally {
@@ -132,30 +133,47 @@ export default function CadastrarAcoes() {
     }
   };
 
+  const getAcaoById = async (id: string) => {
+    setLoading(true);
+    try {
+      const response = await get(`acoes/${id}`);
+      form.setFieldsValue(response);
+      setParticipants(response.acoesPessoas || []);
+    } catch (error) {
+      console.error("Erro ao obter ação pelo ID:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getContextData();
-  }, []);
+    console.log('id',id)
+    if (id) {
+      getAcaoById(id);
+    }
+  }, [id]);
 
   const handleCadastrar = async () => {
     try {
       await form.validateFields();
       const currentValues = form.getFieldsValue();
       const allValues = { ...stepValues, ...currentValues };
-      console.log('allValues', allValues,participants);
-      
+      console.log("allValues", allValues, participants);
+
       const acaoToCreateOrEdit = {
         ...allValues,
         tipoAcao: {
-          id: allValues.tipoAcao
+          id: allValues.tipoAcao,
         },
         instituicaoAtendida: {
-          id: allValues.instituicaoAtendida
+          id: allValues.instituicaoAtendida,
         },
         participantesPdf: allValues.participantesPdf?.file,
         documentos: allValues.documentos?.fileList,
         acoesPessoas: participants,
       };
-  
+
       console.log("acaoToCreateOrEdit", acaoToCreateOrEdit);
       if (!allValues.id) {
         await post("acoes/create", acaoToCreateOrEdit);
@@ -164,13 +182,13 @@ export default function CadastrarAcoes() {
         await put(`acoes/update/${allValues.id}`, acaoToCreateOrEdit);
         message.success("Ação editada com sucesso");
       }
-  
+
       navigate("/Ações/Emitir Relatório");
     } catch (error) {
       console.error("Erro ao cadastrar/editar ação:", error);
     }
   };
-  
+
   const steps = [
     {
       title: "Equipe de Execução",
@@ -289,7 +307,7 @@ export default function CadastrarAcoes() {
                 >
                   <Select>
                     {acaoContexData?.instituicoes?.map((option) => (
-                      <Select.Option key={option.value} value={option.id}>
+                      <Select.Option key={option.id} value={option.id}>
                         {option.nome}
                       </Select.Option>
                     ))}
@@ -433,9 +451,10 @@ export default function CadastrarAcoes() {
                     onChange={(e) => {
                       setSelectedTipoAcao(e);
                     }}
+                    
                   >
                     {acaoContexData?.pessoas?.map((option) => (
-                      <Select.Option key={option.value} value={option.id}>
+                      <Select.Option key={option.id} value={option.id}>
                         {option.nome}
                       </Select.Option>
                     ))}
@@ -452,9 +471,10 @@ export default function CadastrarAcoes() {
                     onChange={(e) => {
                       setSelectedTipoAcao(e);
                     }}
+                    
                   >
                     {acaoContexData?.funcoes?.map((option) => (
-                      <Select.Option key={option.value} value={option.id}>
+                      <Select.Option key={option.id} value={option.id}>
                         {option.nome}
                       </Select.Option>
                     ))}
@@ -478,7 +498,9 @@ export default function CadastrarAcoes() {
                   name="cep"
                   rules={[{ required: true, message: "Campo obrigatório" }]}
                 >
-                  <Input onChange={(e:any) => buscarEnderecoPorCEP(e.target.value)}/>
+                  <Input
+                    onChange={(e: any) => buscarEnderecoPorCEP(e.target.value)}
+                  />
                 </Form.Item>
               </Col>
               <Col span={8}>
@@ -565,7 +587,7 @@ export default function CadastrarAcoes() {
       ),
     },
   ];
-  
+
   const buscarEnderecoPorCEP = async (cep: string) => {
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);

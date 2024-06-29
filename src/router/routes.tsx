@@ -15,6 +15,7 @@ import SemestresLetivos from "../views/Cadastros/Semestre";
 import Cursos from "../views/Cadastros/Curso";
 import EmitirRelatorio from "../views/Acoes/EmitirRelatorio/EmitirRelatorio"
 import GerenciarNiveisAcesso from "../views/GerenciarNiveisAcesso/GerenciarNiveisAcesso";
+import DetalhesAcao from "../views/Acoes/DetalhesAcao/DetalhesAcao";
 
 export interface RouteConfig {
   path: string;
@@ -42,9 +43,11 @@ const routes: RouteConfig[] = [
  //Ações
  { path: "Ações/Buscar Ação", element: <Acoes />, permissions: "" },
  { path: "Ações/Cadastrar Nova Ação", element: <CadastrarAcoes />, permissions: "" },
+ { path: "Ações/Editar Ação", element: <CadastrarAcoes />, permissions: "" },
  { path: "Ações/Emitir Relatório", element: <EmitirRelatorio />, permissions: "" },
  { path: "Eventos/Vincular Equipe de Execução", element: <VincularEquipeExecucao />, permissions: "" },
 
+ { path: "Ações/DetalhesAcao", element: <DetalhesAcao />, permissions: "" },
 
  { path: "Gerenciar Níveis de Acesso", element: <GerenciarNiveisAcesso />, permissions: "" },
  {

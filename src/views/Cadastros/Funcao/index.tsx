@@ -98,7 +98,7 @@ const Funcoes: React.FC = () => {
         message.success("Função criada com sucesso");
         
 
-        funcoes.concat(response)
+        setFuncoes(funcoes.concat(response))
       } else {
         const response = await put(
           `funcoes/update/${funcaoToEdit.id}`,
