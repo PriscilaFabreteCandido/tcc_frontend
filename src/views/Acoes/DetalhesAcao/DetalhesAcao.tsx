@@ -1,6 +1,6 @@
 import { Col, Row, Table, Typography } from "antd";
 import { useEffect, useState } from "react";
-import { get } from "../../../api/axios";
+
 import {
   FileTextOutlined,
   UserOutlined,
@@ -8,6 +8,7 @@ import {
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import { colors } from "../../../global/theme/theme";
+import ApiService from "../../../services/ApiService";
 
 const { Title, Text } = Typography;
 
@@ -30,11 +31,12 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id }) => {
   const [acao, setAcao] = useState<any>({});
   const [participants, setParticipants] = useState<Participante[]>([]);
   const [documents, setDocuments] = useState<Documento[]>([]);
+  const apiService: ApiService = new ApiService();
 
   const getAcaoById = async (id: string) => {
     setLoading(true);
     try {
-      const response = await get(`acoes/${id}`);
+      const response = await apiService.get(`acoes/${id}`);
       setAcao(response);
       setParticipants(response.participantes);
       setDocuments(response.documentos);

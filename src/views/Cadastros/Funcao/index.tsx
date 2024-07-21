@@ -13,7 +13,7 @@ import {
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { CardFooter } from "../../../components/CardFooter";
 import { ColumnsType } from "antd/es/table";
-import { get, post, put, remove } from "../../../api/axios";
+import ApiService from "../../../services/ApiService";
 
 interface FuncaoType {
   key: React.Key;
@@ -42,7 +42,8 @@ const Funcoes: React.FC = () => {
   const [funcoes, setFuncoes] = useState<FuncaoType[]>([]);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
-
+  const apiService: ApiService = new ApiService();
+  
   const showModal = () => {
     setIsOpenModal(true);
   };
@@ -56,7 +57,7 @@ const Funcoes: React.FC = () => {
   const getFuncoes = async () => {
     setLoading(true);
     try {
-      const response: FuncaoType[] = await get("funcoes");
+      const response: FuncaoType[] = await apiService.get("funcoes");
       setFuncoes(response);
     } catch (error) {
       console.error("Erro ao obter instituições:", error);
@@ -67,7 +68,7 @@ const Funcoes: React.FC = () => {
 
   const onDelete = async (id: number) => {
     try {
-      await remove(`funcoes/delete/${id}`);
+      await apiService.remove(`funcoes/delete/${id}`);
       setFuncoes(
         funcoes.filter((instituicao) => instituicao.id !== id)
       );
@@ -93,14 +94,15 @@ const Funcoes: React.FC = () => {
       };
 
       if (!funcaoToEdit) {
-        const response = await post("funcoes/create", instituicaoToCreateOrEdit);
+        const response = await apiService.post("funcoes/create", instituicaoToCreateOrEdit);
+        console.log('response', response)
         setIsOpenModal(false)
         message.success("Função criada com sucesso");
         
 
         setFuncoes(funcoes.concat(response))
       } else {
-        const response = await put(
+        const response = await apiService.put(
           `funcoes/update/${funcaoToEdit.id}`,
           instituicaoToCreateOrEdit
         );

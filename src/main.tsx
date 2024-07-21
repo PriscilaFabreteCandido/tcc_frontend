@@ -26,7 +26,7 @@ const config = {
 };
 
 
-let persistor = persistStore(store)
+const persistor = persistStore(store)
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
 

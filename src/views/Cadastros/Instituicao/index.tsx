@@ -20,9 +20,9 @@ import {
 } from "@ant-design/icons";
 import { CardFooter } from "../../../components/CardFooter";
 import { ColumnsType } from "antd/es/table";
-import { get, post,  remove } from "../../../api/axios";
 import { useNavigate } from "react-router";
 import { tipoInstituicoes } from "../../../data/tipoInstituicoes";
+import ApiService from "../../../services/ApiService";
 
 export interface TipoInstituicaoType {
   id: number;
@@ -49,11 +49,12 @@ const Instituicoes: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
+  const apiService: ApiService = new ApiService();
   
   const getInstituicoes = async () => {
     setLoading(true);
     try {
-      const response: InstituicaoType[] = await get("instituicoes");
+      const response: InstituicaoType[] = await apiService.get("instituicoes");
       setInstituicoes(response);
     } catch (error) {
       console.error("Erro ao obter instituições:", error);
@@ -68,7 +69,7 @@ const Instituicoes: React.FC = () => {
 
   const onDelete = async (id: number) => {
     try {
-      await remove(`instituicoes/delete/${id}`);
+      await apiService.remove(`instituicoes/delete/${id}`);
       setInstituicoes(
         instituicoes.filter((instituicao) => instituicao.id !== id)
       );
@@ -83,7 +84,7 @@ const Instituicoes: React.FC = () => {
       setInstituicoes([]);
       setLoading(true);
       const values = formFilter.getFieldsValue();
-      const resp = await post(`instituicoes/filter`, values);
+      const resp = await apiService.post(`instituicoes/filter`, values);
       setInstituicoes(resp);
     } catch (error) {
       console.error("Erro ao excluir pessoa:", error);

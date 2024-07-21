@@ -48,7 +48,7 @@ function getItem(
 
 const items: MenuProps["items"] = [
   //getItem("Calendário", "inicio", <CalendarOutlined  />, "/Calendário"),
-
+  
   getItem("Cadastros", "cadastros", <FileTextOutlined />, "/Consultas", [
     getItem("Curso", "cursos", <DesktopOutlined />, "Cadastros/Cursos"),
     getItem("Função", "funcao", <IdcardOutlined />, "Cadastros/Funções"),
@@ -62,14 +62,14 @@ const items: MenuProps["items"] = [
     getItem("Emitir Relatórios", "emitirRelatorios", <FileSearchOutlined  />, "Ações/Emitir Relatório"),
     getItem("DetalhesAcao", "DetalhesAcao", <BsPeople  />, "/Ações/DetalhesAcao"),
   ]),
-  getItem("Gerenciar Nívies de Acesso", "niveisAcesso", <SafetyOutlined />,"/Gerenciar Níveis de Acesso"),
+  getItem("Gerenciar Usuários", "niveisAcesso", <SafetyOutlined />,"/Gerenciar Usuários"),
 ];
 
 function MenuLeft({ isIconClicked }: any) {
   const [defaultSelectedKeys, setDefaultSelectedKeys] = useState<any[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
-
+  
   useEffect(() => {
     const currentPath = location.pathname;
 

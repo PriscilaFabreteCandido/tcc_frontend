@@ -25,8 +25,10 @@ import {
 } from "@ant-design/icons";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { get, post, put } from "../../../api/axios";
+
 import { modalidades } from "../../../data/modalidades";
+import { convertFileToBase64 } from "../../../utils/functions/convertFileToBase64";
+import ApiService from "../../../services/ApiService";
 
 export interface AcaoContextDataType {
   projetos: any[];
@@ -52,9 +54,11 @@ export default function CadastrarAcoes() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = location.state || {}; // Use useParams to get the ID from the URL
-
+  const [participantesPdf, setParticipantesPdf] = useState([]);
+  const [documentos, setDocumentos] = useState([]);
+  const apiService: ApiService = new ApiService();
   const [current, setCurrent] = useState(0);
-
+  
   const next = async () => {
     try {
       await form.validateFields();
@@ -67,7 +71,8 @@ export default function CadastrarAcoes() {
   };
 
   const prev = () => {
-    const previousValues = steps[current - 1].content.props.form.getFieldsValue();
+    const previousValues =
+      steps[current - 1].content.props.form.getFieldsValue();
     form.setFieldsValue({ ...previousValues });
     setCurrent(current - 1);
   };
@@ -90,6 +95,27 @@ export default function CadastrarAcoes() {
       participants.filter((participant) => participant.nome !== record.nome)
     );
   };
+
+  const handleParticipantesPdfChange = async ({ fileList }) => {
+    const updatedFiles = await Promise.all(
+      fileList.map(async (file:any) => {
+        const fileObj = file.originFileObj || file;
+        return await convertFileToBase64(fileObj);
+      })
+    );
+    setParticipantesPdf(updatedFiles);
+  };
+  
+  const handleDocumentosChange = async ({ fileList }) => {
+    const updatedFiles = await Promise.all(
+      fileList.map(async (file:any) => {
+        const fileObj = file.originFileObj || file;
+        return await convertFileToBase64(fileObj);
+      })
+    );
+    setDocumentos(updatedFiles);
+  };
+  
 
   const columns = [
     {
@@ -123,7 +149,7 @@ export default function CadastrarAcoes() {
   const getContextData = async () => {
     setLoading(true);
     try {
-      const response: AcaoContextDataType = await get("acoes/contextData");
+      const response: AcaoContextDataType = await apiService.get("acoes/contextData");
       setAcaoContexData(response);
       setTipoAcoes(response.tipoAcoes);
     } catch (error) {
@@ -136,7 +162,7 @@ export default function CadastrarAcoes() {
   const getAcaoById = async (id: string) => {
     setLoading(true);
     try {
-      const response = await get(`acoes/${id}`);
+      const response = await apiService.get(`acoes/${id}`);
       form.setFieldsValue(response);
       setParticipants(response.acoesPessoas || []);
     } catch (error) {
@@ -148,7 +174,7 @@ export default function CadastrarAcoes() {
 
   useEffect(() => {
     getContextData();
-    console.log('id',id)
+    console.log("id", id);
     if (id) {
       getAcaoById(id);
     }
@@ -169,17 +195,17 @@ export default function CadastrarAcoes() {
         instituicaoAtendida: {
           id: allValues.instituicaoAtendida,
         },
-        participantesPdf: allValues.participantesPdf?.file,
-        documentos: allValues.documentos?.fileList,
+        participantesDocumento: participantesPdf[0],
+        documentos,
         acoesPessoas: participants,
       };
 
       console.log("acaoToCreateOrEdit", acaoToCreateOrEdit);
       if (!allValues.id) {
-        await post("acoes/create", acaoToCreateOrEdit);
+        await apiService.post("acoes/create", acaoToCreateOrEdit);
         message.success("Ação criada com sucesso");
       } else {
-        await put(`acoes/update/${allValues.id}`, acaoToCreateOrEdit);
+        await apiService.put(`acoes/update/${allValues.id}`, acaoToCreateOrEdit);
         message.success("Ação editada com sucesso");
       }
 
@@ -451,7 +477,6 @@ export default function CadastrarAcoes() {
                     onChange={(e) => {
                       setSelectedTipoAcao(e);
                     }}
-                    
                   >
                     {acaoContexData?.pessoas?.map((option) => (
                       <Select.Option key={option.id} value={option.id}>
@@ -471,7 +496,6 @@ export default function CadastrarAcoes() {
                     onChange={(e) => {
                       setSelectedTipoAcao(e);
                     }}
-                    
                   >
                     {acaoContexData?.funcoes?.map((option) => (
                       <Select.Option key={option.id} value={option.id}>
@@ -564,9 +588,17 @@ export default function CadastrarAcoes() {
               <Col span={12}>
                 <Form.Item
                   label="Participantes (Anexar PDF)"
-                  name="participantesPdf"
+                  name="participantesDocumento"
                 >
-                  <Upload>
+                  <Upload
+                    fileList={participantesPdf.map((file) => ({
+                      uid: file.nome,
+                      name: file.nome,
+                      status: "done",
+                    }))}
+                    onChange={handleParticipantesPdfChange}
+                    beforeUpload={() => false} // Previne o upload automático
+                  >
                     <Button icon={<UploadOutlined />}>Upload</Button>
                   </Upload>
                 </Form.Item>
@@ -576,7 +608,15 @@ export default function CadastrarAcoes() {
                   label="Documentos (Anexar PDF/Excel/Doc)"
                   name="documentos"
                 >
-                  <Upload>
+                  <Upload
+                    fileList={documentos.map((file) => ({
+                      uid: file.nome,
+                      name: file.nome,
+                      status: "done",
+                    }))}
+                    onChange={handleDocumentosChange}
+                    beforeUpload={() => false} // Previne o upload automático
+                  >
                     <Button icon={<UploadOutlined />}>Upload</Button>
                   </Upload>
                 </Form.Item>

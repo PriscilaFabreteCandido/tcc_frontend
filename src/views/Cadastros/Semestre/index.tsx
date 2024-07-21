@@ -14,9 +14,8 @@ import {
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { CardFooter } from "../../../components/CardFooter";
 import { ColumnsType } from "antd/es/table";
-import { get, post, put, remove } from "../../../api/axios";
 import moment from "moment";
-
+import ApiService from "../../../services/ApiService";
 
 interface PeriodoAcademicoType {
   key: React.Key;
@@ -35,6 +34,7 @@ const SemestresLetivos: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
   const [formato, setFormato] = useState<string | undefined>(undefined);
+  const apiService: ApiService = new ApiService();
 
   const showModal = () => {
     setIsOpenModal(true);
@@ -58,7 +58,7 @@ const SemestresLetivos: React.FC = () => {
   const getPeriodos = async () => {
     setLoading(true);
     try {
-      const response: PeriodoAcademicoType[] = await get("periodos");
+      const response: PeriodoAcademicoType[] = await apiService.get("periodos");
       setPeriodos(response);
     } catch (error) {
       console.error("Erro ao obter períodos acadêmicos:", error);
@@ -86,11 +86,11 @@ const SemestresLetivos: React.FC = () => {
       };
 
       if (!periodoToEdit) {
-        const response = await post("periodos/create", periodoData);
+        const response = await apiService.post("periodos/create", periodoData);
         setPeriodos([...periodos, response]);
         message.success("Período acadêmico criado com sucesso");
       } else {
-        const response = await put(`periodos/update/${periodoToEdit.id}`, periodoData);
+        const response = await apiService.put(`periodos/update/${periodoToEdit.id}`, periodoData);
         setPeriodos(periodos.map(periodo => (periodo.id === response.id ? response : periodo)));
         message.success("Período acadêmico editado com sucesso");
       }
@@ -103,7 +103,7 @@ const SemestresLetivos: React.FC = () => {
 
   const onDelete = async (id: number) => {
     try {
-      await remove(`periodos/delete/${id}`);
+      await apiService.remove(`periodos/delete/${id}`);
       setPeriodos(periodos.filter(periodo => periodo.id !== id));
       message.success("Período acadêmico excluído com sucesso");
     } catch (error: any) {

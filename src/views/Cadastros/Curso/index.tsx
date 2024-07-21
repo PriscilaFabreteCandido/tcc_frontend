@@ -14,8 +14,8 @@ import {
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { CardFooter } from "../../../components/CardFooter";
 import { ColumnsType } from "antd/es/table";
-import { get, post, put, remove } from "../../../api/axios";
 import { niveisEscolaridade } from "../../../data/niveisdeescolaridade";
+import ApiService from "../../../services/ApiService";
 
 interface CursoType {
   key: React.Key;
@@ -30,6 +30,7 @@ const Cursos: React.FC = () => {
   const [cursos, setCursos] = useState<CursoType[]>([]);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
+  const apiService: ApiService = new ApiService();
 
   const showModal = () => {
     setIsOpenModal(true);
@@ -44,7 +45,7 @@ const Cursos: React.FC = () => {
   const getCursos = async () => {
     setLoading(true);
     try {
-      const response: CursoType[] = await get("cursos");
+      const response: CursoType[] = await apiService.get("cursos");
       setCursos(response);
     } catch (error) {
       console.error("Erro ao obter cursos:", error);
@@ -55,7 +56,7 @@ const Cursos: React.FC = () => {
 
   const onDelete = async (id: number) => {
     try {
-      await remove(`cursos/delete/${id}`);
+      await apiService.remove(`cursos/delete/${id}`);
       setCursos(cursos.filter((curso) => curso.id !== id));
       message.success("Curso excluído com sucesso");
     } catch (error) {
@@ -79,12 +80,12 @@ const Cursos: React.FC = () => {
       };
 
       if (!cursoToEdit) {
-        const resp = await post("cursos/create", cursoToCreateOrEdit);
+        const resp = await apiService.post("cursos/create", cursoToCreateOrEdit);
         setIsOpenModal(false);
         message.success("Curso criado com sucesso");
         setCursos(cursos.concat(resp))
       } else {
-        const resp = await put(
+        const resp = await apiService.put(
           `cursos/update/${cursoToEdit.id}`,
           cursoToCreateOrEdit
         );

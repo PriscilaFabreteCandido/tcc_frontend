@@ -5,23 +5,23 @@ import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import loginSvg from "../../../assets/images/login.svg";
 import ifes from "../../../assets/images/LogoLeter_LetraPreta-removebg-preview.png";
 import { login } from "../../../features/authSlice";
-import { post } from "../../../api/axios";
 import { useDispatch } from "react-redux";
+import ApiService from "../../../services/ApiService";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
- 
+  const apiService: ApiService = new ApiService();
 
   const handleLogin = async () => {
     try {
       setLoading(true)
       const params = {
-        login: "",
-        password: ""
+        login: "teste",
+        password: "1234"
       }
 
-      const response = await post("/", params)
+      const response = await apiService.post("/usuarios/login", params)
 
       console.log('Login Efetuado!:', response);
       console.log('response', response)
@@ -29,7 +29,7 @@ const Login = () => {
         token: response
       }));
 
-  
+
     } catch (error) {
       console.error('Login failed:', error);
       
@@ -75,7 +75,7 @@ const Login = () => {
               <Form.Item
                 name="username"
                 rules={[
-                  { required: true, message: "Please input your username!" },
+                  { required: false, message: "Please input your username!" },
                 ]}
               >
                 <Input prefix={<UserOutlined />} placeholder="Usuário" />
@@ -84,7 +84,7 @@ const Login = () => {
               <Form.Item
                 name="password"
                 rules={[
-                  { required: true, message: "Please input your password!" },
+                  { required: false, message: "Please input your password!" },
                 ]}
               >
                 <Input.Password

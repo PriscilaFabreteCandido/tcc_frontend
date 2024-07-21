@@ -23,11 +23,11 @@ import {
   FilterOutlined,
   InfoCircleOutlined,
 } from "@ant-design/icons";
-import { get } from "../../../api/axios";
 import { iconOptions } from "../../Cadastros/TipoAcoes";
 import { AcaoContextDataType } from "../CadastrarAcoes";
 import DetalhesAcao from "../DetalhesAcao/DetalhesAcao";
 import { useNavigate } from "react-router";
+import ApiService from "../../../services/ApiService";
 
 const EmitirRelatorio = () => {
   const [formFilter] = Form.useForm();
@@ -36,6 +36,7 @@ const EmitirRelatorio = () => {
   const [contextData, setContextData] = useState();
   const [isModalVisibleInfo, setIsModalVisibleInfo] = useState(false);
   const navigate = useNavigate();
+  const apiService: ApiService = new ApiService();
   
   // Dados mockados
   const data = [
@@ -307,7 +308,7 @@ const EmitirRelatorio = () => {
   const getContextData = async () => {
     setLoading(true);
     try {
-      const response: AcaoContextDataType = await get("acoes/contextData");
+      const response: AcaoContextDataType = await apiService.get("acoes/contextData");
       setContextData(response);
       setTipoAcoes(response.tipoAcoes);
     } catch (error) {

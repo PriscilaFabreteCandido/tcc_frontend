@@ -25,7 +25,8 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router";
 import { ColumnsType } from "antd/es/table";
-import { get, remove } from "../../api/axios";
+import ApiService from "../../services/ApiService";
+
 
 interface DataType {
   key: React.Key;
@@ -46,6 +47,7 @@ const Acoes: React.FC = () => {
   const [, setExpanded] = useState(false);
   const [formFilter] = Form.useForm();
   const [data, setData] = useState<any[]>();
+  const apiService: ApiService = new ApiService();
 
   const onFilter = () => {};
 
@@ -172,7 +174,7 @@ const Acoes: React.FC = () => {
 
   const onDelete = async (id: number) => {
     try {
-      await remove(`acoes/delete/${id}`);
+      await apiService.remove(`acoes/delete/${id}`);
       setData(data?.filter((curso) => curso.id !== id));
       message.success("Ação excluída com sucesso");
     } catch (error) {
@@ -265,7 +267,7 @@ const Acoes: React.FC = () => {
   const getAcoes = async () => {
     setLoading(true);
     try {
-      const response: any[] = await get("acoes");
+      const response: any[] = await apiService.get("acoes");
       setData(response);
     } catch (error) {
       console.error("Erro ao obter cursos:", error);

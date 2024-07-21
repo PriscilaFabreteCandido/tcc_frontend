@@ -6,7 +6,7 @@ import MenuLeft from "../components/MenuLeft";
 import ifes from "../assets/images/LogoLeter_LetraPreta-removebg-preview.png";
 import logo from "../assets/images/cubo.svg";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Layout, { Content, Header } from "antd/es/layout/layout";
 import {
   LogoutOutlined,
@@ -18,18 +18,38 @@ import { Avatar, Button, Dropdown, Menu, Space, theme } from "antd";
 import Sider from "antd/es/layout/Sider";
 import { colors } from "../global/theme/theme";
 import { AiOutlineDown } from "react-icons/ai";
+import { useDispatch } from "react-redux";
+import { logout, updateUserInfo } from "../features/authSlice";
+import SessionService from "../services/SessionService";
+import ApiService from "../services/ApiService";
 
 function RootLayout() {
   const [collapsed, setCollapsed] = useState(false);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
+  const {token: { colorBgContainer, borderRadiusLG },} = theme.useToken();
+  const dispatch = useDispatch();
+  const [userInfo, setUserInfo] = useState<any>(new SessionService().getUserInfo());
+  const apiService: ApiService = new ApiService();
 
-  const userName = "Nome do Usuário";
+
+  function sairAplicacao(){
+    dispatch(logout())
+  }
+
+  const getUserInfo = async () => {
+    if(!userInfo){
+      const res = await apiService.get('/usuarios/info')
+      dispatch(updateUserInfo({userInfo: res}))
+      setUserInfo(res)
+    }
+  }
+
+  useEffect(() => {
+    getUserInfo()
+  }, [])
 
   const menu = (
     <Menu>
-      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={() => {/* lógica para sair */ }}>
+      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={() => {sairAplicacao() }}>
         Sair
       </Menu.Item>
     </Menu>
@@ -87,7 +107,7 @@ function RootLayout() {
             <Space style={{display: "flex", alignItems: "center", gap: 15}}>
               <Avatar style={{ backgroundColor: '#fff' }} icon={<UserOutlined style={{color: colors.secundary}}/>} />
 
-              <span style={{ color: 'white' }}>{userName}</span>
+              <span style={{ color: 'white' }}>{userInfo?.pessoa?.nome}</span>
 
               <Dropdown overlay={menu} trigger={['click']} >
                 <Avatar style={{ backgroundColor: colors.secundary }} icon={<AiOutlineDown />} />

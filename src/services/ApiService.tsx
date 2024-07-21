@@ -7,16 +7,13 @@ import SessionService from './SessionService';
 class ApiService {
   private apiService: AxiosInstance;
   private token: any = new SessionService().getAuthToken();
+  private session:any = new SessionService ().getSession();
   private dispatch = useDispatch();
 
   endpoints = {
     login: "/Login",
     logout: "",
-    userinfo: "/userinfo",
-    ebix: "/Ebix/",
-    apolice: "/Apolice/",
-    Proposta: "/Proposta/",
-    fluxoTela: "/FluxoTela/"
+    
 
   };
 
@@ -25,17 +22,17 @@ class ApiService {
     this.dispatch(clearSession())
   }
 
-  constructor(baseURL: string, forceToken: boolean = true) {
+  constructor() {
     this.apiService = axios.create({
-      baseURL: baseURL,
+      baseURL: "http://localhost:8080/api",
       timeout: 1000000000,
     });
 
     this.apiService.interceptors.request.use(
       (config) => {
         config.headers['Accept'] = '*/*';
-
-        if (forceToken && this.token) {
+        
+        if (this.token) {
           config.headers["Authorization"] = `Bearer ${this.token.accessToken}`;
         }
 
@@ -49,7 +46,7 @@ class ApiService {
     this.apiService.interceptors.response.use(
       (response: any) => {
         
-        return response
+        return response.data
       },
       async (error: any) => {
         if (error.response?.data?.statusCode === 401) {
@@ -81,20 +78,20 @@ class ApiService {
   }
 
   // Métodos para os verbos HTTP GET, POST, DELETE e PUT
-  get(endpoint: string, config = {}) {
+  get(endpoint: string, config = {}):any {
 
     return this.apiService.get(endpoint, config);
   }
 
-  post(endpoint: string, data: any, config = {}) {
+  post(endpoint: string, data: any, config = {}):any {
     return this.apiService.post(endpoint, data, config);
   }
 
-  remove(endpoint: string, config = {}) {
+  remove(endpoint: string, config = {}):any {
     return this.apiService.delete(endpoint, config);
   }
 
-  put(endpoint: string, data: any, config = {}) {
+  put(endpoint: string, data: any, config = {}):any {
     return this.apiService.put(endpoint, data, config);
   }
 }

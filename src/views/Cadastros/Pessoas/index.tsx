@@ -23,12 +23,12 @@ import {
 } from "@ant-design/icons";
 import { CardFooter } from "../../../components/CardFooter";
 import { ColumnsType } from "antd/es/table";
-import { get, post, remove } from "../../../api/axios";
 import { useNavigate } from "react-router-dom";
 import { niveisEscolaridade } from "../../../data/niveisdeescolaridade";
 import moment from "moment";
+import ApiService from "../../../services/ApiService";
 
-interface PessoaType {
+export interface PessoaType {
   key: React.Key;
   id: number;
   nome: string;
@@ -48,11 +48,12 @@ const Pessoas: React.FC = () => {
   const [formFilter] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
-
+  const apiService: ApiService = new ApiService();
+  
   const getPessoas = async () => {
     setLoading(true);
     try {
-      const response: PessoaType[] = await get("pessoas");
+      const response: PessoaType[] = await apiService.get("pessoas");
       setPessoas(response);
     } catch (error) {
       console.error("Erro ao obter pessoas:", error);
@@ -67,7 +68,7 @@ const Pessoas: React.FC = () => {
 
   const onDelete = async (id: number) => {
     try {
-      await remove(`pessoas/delete/${id}`);
+      await apiService.remove(`pessoas/delete/${id}`);
       setPessoas(pessoas.filter((pessoa) => pessoa.id !== id));
       message.success("Pessoa excluída com sucesso");
     } catch (error) {

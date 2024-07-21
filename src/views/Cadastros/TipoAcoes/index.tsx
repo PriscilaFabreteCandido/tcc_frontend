@@ -27,7 +27,7 @@ import {
 } from "@ant-design/icons";
 import { CardFooter } from "../../../components/CardFooter";
 import { ColumnsType } from "antd/es/table";
-import { get, post, put, remove } from "../../../api/axios";
+import ApiService from "../../../services/ApiService";
 
 export interface ActionType {
   key: React.Key;
@@ -54,7 +54,8 @@ const TiposAcoes: React.FC = () => {
   const [tiposAcoes, setTiposAcoes] = useState<ActionType[]>([]);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
-
+  const apiService: ApiService = new ApiService();
+  
   const showModal = () => {
     setIsOpenModal(true);
   };
@@ -68,7 +69,7 @@ const TiposAcoes: React.FC = () => {
   const getTiposAcoes = async () => {
     setLoading(true);
     try {
-      const response: ActionType[] = await get("tipoAcoes");
+      const response: ActionType[] = await apiService.get("tipoAcoes");
       setTiposAcoes(response);
     } catch (error) {
       console.error("Erro ao obter tipos de ações:", error);
@@ -93,7 +94,7 @@ const TiposAcoes: React.FC = () => {
       };
 
       if (!tipoAcaoToEdit) {
-        const response = await post("tipoAcoes/create", tipoAcaoData);
+        const response = await apiService.post("tipoAcoes/create", tipoAcaoData);
         message.success("Tipo de ação criado com sucesso");
         setTiposAcoes([...tiposAcoes, response]); // Adiciona o novo tipo de ação ao array
       } else {
@@ -117,7 +118,7 @@ const TiposAcoes: React.FC = () => {
 
   const onDelete = async (id: number) => {
     try {
-      await remove(`tipoAcoes/delete/${id}`);
+      await apiService.remove(`tipoAcoes/delete/${id}`);
       getTiposAcoes();
       message.success("Tipo de ação excluído com sucesso");
     } catch (error) {

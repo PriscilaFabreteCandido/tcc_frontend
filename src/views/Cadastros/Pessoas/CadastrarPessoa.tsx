@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { Button, DatePicker, Form, Input, Select, Spin, Switch, message } from "antd";
 import { useLocation, useNavigate } from "react-router";
 import { InstituicaoType } from "../Instituicao";
-import { get, post, put } from "../../../api/axios";
 import { niveisEscolaridade } from "../../../data/niveisdeescolaridade";
 import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import { vinculos } from "../../../data/vinculos";
+import ApiService from "../../../services/ApiService";
 
 export interface FuncoesType {
   id: number;
@@ -26,6 +26,7 @@ const CadastrarPessoa = () => {
   const { pessoa } = location.state || {};
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
+  const apiService: ApiService = new ApiService();
 
   useEffect(() => {
     form.setFieldsValue({ativo: true})
@@ -35,7 +36,7 @@ const CadastrarPessoa = () => {
   const getContextData = async () => {
     setLoading(true);
     try {
-      const response = await get("pessoas/contextData");
+      const response = await apiService.get("pessoas/contextData");
 
       setInstituicoes(response.instituicoes);
       setFuncoes(response.funcoes);
@@ -107,7 +108,7 @@ const CadastrarPessoa = () => {
       };
 
       if (!pessoa) {
-        await post("pessoas/create", pessoaData);
+        await apiService.post("pessoas/create", pessoaData);
         message.success("Pessoa criada com sucesso");
       } else {
         await put(`pessoas/update/${pessoa.id}`, pessoaData);

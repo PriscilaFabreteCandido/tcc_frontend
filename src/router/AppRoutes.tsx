@@ -9,13 +9,14 @@ import AlertListener from "../components/alertlistener/AlertListener.tsx";
 
 export default function AppRoutes() {
   const isAuthenticated = new SessionService().getSession().isAuthenticated
-
+  const session = new SessionService().getSession();
+  console.log('veio aqui', session) 
   return (
     <BrowserRouter>
       <AlertListener />
       <Fragment>
         <Routes>
-          {!isAuthenticated ? (
+          {isAuthenticated ? (
             <Route element={<RootLayout />}>
               {/* Renderiza as rotas dentro de RootLayout */}
               {routes.map((route) => (

@@ -14,8 +14,7 @@ import CadastrarInstituicao from "../views/Cadastros/Instituicao/CadastrarInstit
 import SemestresLetivos from "../views/Cadastros/Semestre";
 import Cursos from "../views/Cadastros/Curso";
 import EmitirRelatorio from "../views/Acoes/EmitirRelatorio/EmitirRelatorio"
-import GerenciarNiveisAcesso from "../views/GerenciarNiveisAcesso/GerenciarNiveisAcesso";
-import DetalhesAcao from "../views/Acoes/DetalhesAcao/DetalhesAcao";
+import GerenciarNiveisAcesso from "../views/GerenciarUsuarios/GerenciarUsuarios";
 
 export interface RouteConfig {
   path: string;
@@ -47,9 +46,9 @@ const routes: RouteConfig[] = [
  { path: "Ações/Emitir Relatório", element: <EmitirRelatorio />, permissions: "" },
  { path: "Eventos/Vincular Equipe de Execução", element: <VincularEquipeExecucao />, permissions: "" },
 
- { path: "Ações/DetalhesAcao", element: <DetalhesAcao />, permissions: "" },
+ 
 
- { path: "Gerenciar Níveis de Acesso", element: <GerenciarNiveisAcesso />, permissions: "" },
+ { path: "Gerenciar Usuários", element: <GerenciarNiveisAcesso />, permissions: "" },
  {
    path: "*",
    permissions: "",

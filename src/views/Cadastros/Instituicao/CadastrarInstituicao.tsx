@@ -2,14 +2,14 @@ import React, { useEffect } from "react";
 import { Button, Form, Input, Select,  message } from "antd";
 import { useLocation, useNavigate } from "react-router";
 
-import {  post, put } from "../../../api/axios";
 import { tipoInstituicoes } from "../../../data/tipoInstituicoes";
+import ApiService from "../../../services/ApiService";
 
 const CadastrarInstituicao = () => {
   const [form] = Form.useForm();
   const location = useLocation();
   const navigate = useNavigate() as any;
-  
+  const apiService: ApiService = new ApiService();
 
   const { instituicao } = location.state || {};
 
@@ -84,11 +84,11 @@ const CadastrarInstituicao = () => {
       };
 
       if (!instituicao) {
-        await post("instituicoes/create", instituicaoToCreateOrEdit);
+        await apiService.post("instituicoes/create", instituicaoToCreateOrEdit);
         navigate("/Cadastros/Instituições");
         message.success("Instituição criada com sucesso");
       } else {
-        await put(
+        await apiService.put(
           `instituicoes/update/${instituicao.id}`,
           instituicaoToCreateOrEdit
         );
