@@ -21,6 +21,7 @@ const { Option } = Select;
 const GerenciarUsuarios = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [pessoas, setPessoas] = useState<any[]>([]);
+  const [usuarios, setUsuarios]  = useState<any[]>([]);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const apiService: ApiService = new ApiService();
@@ -30,10 +31,8 @@ const GerenciarUsuarios = () => {
       message.error("As senhas não são iguais.");
       return;
     }
-
-    message.success("Usuário criado ou atualizado com sucesso.");
-    setIsModalVisible(false);
-    form.resetFields();
+    handleCadastrar();
+    
   };
 
   const handleCancel = () => {
@@ -53,15 +52,69 @@ const GerenciarUsuarios = () => {
     }
   };
 
+  const getUsuarios = async () => {
+    setLoading(true);
+    try {
+      const response: any[] = await apiService.get("usuarios");
+      setUsuarios(response);
+    } catch (error) {
+      console.error("Erro ao obter pessoas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    getUsuarios();
     getPessoas();
   }, []);
 
+
+  const handleCadastrar = async () => {
+    try {
+      await form.validateFields();
+      const currentValues = form.getFieldsValue();
+
+      const acaoToCreateOrEdit = {
+        ...currentValues,
+        pessoa: {
+          id: currentValues.idPessoa
+        },
+      };
+
+      if (!currentValues.id) {
+        await apiService.post("usuarios/create", acaoToCreateOrEdit); 
+        message.success("Usuário criado ou atualizado com sucesso");
+      } else {
+        await apiService.put(`usuarios/update/${currentValues.id}`, acaoToCreateOrEdit);
+        message.success("Usuário editado ou atualizado com sucesso");
+      }
+
+      setIsModalVisible(false)
+      form.resetFields();
+    } catch (error) {
+      message.error("Erro ao cadastrar/editar ação:", error?.data?.result);
+    }
+   
+  };
+
   const columns = [
     {
+      title: "Nome",
+      dataIndex: "pessoa",
+      key: "nome",
+      render: (record: any) => record?.nome,
+    },
+    {
+      title: "Email",
+      dataIndex: "pessoa",
+      key: "email",
+      render: (record: any) => record?.email,
+    },
+    {
       title: "Usuário",
-      dataIndex: "username",
-      key: "username",
+      dataIndex: "login",
+      key: "login",
     },
     {
       title: "Ações",
@@ -100,7 +153,7 @@ const GerenciarUsuarios = () => {
       >
         Adicionar Usuário
       </Button>
-      <Table columns={columns} dataSource={[]} rowKey="id" />
+      <Table columns={columns} dataSource={usuarios} rowKey="id" />
 
       <Modal
         title="Criar Usuário"
