@@ -60,7 +60,6 @@ const items: MenuProps["items"] = [
   getItem("Ações", "acoes", <PlayCircleOutlined  />, "/Consultas", [
     getItem("Nova Ação", "novaAcao", <DesktopOutlined  />, "/Ações/Cadastrar Nova Ação"),
     getItem("Emitir Relatórios", "emitirRelatorios", <FileSearchOutlined  />, "Ações/Emitir Relatório"),
-    getItem("DetalhesAcao", "DetalhesAcao", <BsPeople  />, "/Ações/DetalhesAcao"),
   ]),
   getItem("Gerenciar Usuários", "niveisAcesso", <SafetyOutlined />,"/Gerenciar Usuários"),
 ];

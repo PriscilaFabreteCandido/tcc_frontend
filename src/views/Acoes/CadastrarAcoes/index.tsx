@@ -197,7 +197,7 @@ export default function CadastrarAcoes() {
         },
         participantesDocumento: participantesPdf[0],
         documentos,
-        acoesPessoas: participants,
+        acaoPessoas: participants,
       };
 
       console.log("acaoToCreateOrEdit", acaoToCreateOrEdit);
