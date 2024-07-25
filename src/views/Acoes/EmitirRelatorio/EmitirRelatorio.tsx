@@ -28,6 +28,7 @@ import { AcaoContextDataType } from "../CadastrarAcoes";
 import DetalhesAcao from "../DetalhesAcao/DetalhesAcao";
 import { useNavigate } from "react-router";
 import ApiService from "../../../services/ApiService";
+import { setDefaultAutoSelectFamily } from "net";
 
 const EmitirRelatorio = () => {
   const [formFilter] = Form.useForm();
@@ -37,92 +38,14 @@ const EmitirRelatorio = () => {
   const [isModalVisibleInfo, setIsModalVisibleInfo] = useState(false);
   const navigate = useNavigate();
   const apiService: ApiService = new ApiService();
-  
-  // Dados mockados
-  const data = [
-    {
-      key: "1",
-      id: 1,
-      ano: "2021",
-      tipoAcao: "Curso",
-      descricao: "Curso de Java",
-    },
-    {
-      key: "2",
-      id: 2,
-      ano: "2022",
-      tipoAcao: "Projeto",
-      descricao: "Projeto de Pesquisa",
-    },
-    {
-      key: "3",
-      id: 3,
-      ano: "2023",
-      tipoAcao: "Palestra",
-      descricao: "Palestra sobre IA",
-    },
-    {
-      key: "4",
-      id: 4,
-      ano: "2023",
-      tipoAcao: "Visita Guiada",
-      descricao: "Visita ao Museu",
-    },
-    {
-      key: "5",
-      id: 5,
-      ano: "2021",
-      tipoAcao: "Curso",
-      descricao: "Curso de Python",
-    },
-    {
-      key: "6",
-      id: 6,
-      ano: "2022",
-      tipoAcao: "Projeto",
-      descricao: "Projeto de Robótica",
-    },
-    {
-      key: "7",
-      id: 7,
-      ano: "2023",
-      tipoAcao: "Palestra",
-      descricao: "Palestra sobre Segurança",
-    },
-    {
-      key: "8",
-      id: 8,
-      ano: "2023",
-      tipoAcao: "Visita Guiada",
-      descricao: "Visita à Fábrica",
-    },
-    {
-      key: "9",
-      id: 9,
-      ano: "2023",
-      tipoAcao: "Curso",
-      descricao: "Curso de Informática",
-      projetoId: 2,
-    },
-    {
-      key: "10",
-      id: 10,
-      ano: "2023",
-      tipoAcao: "Palestra",
-      descricao: "Curso de python",
-      projetoId: 2,
-    },
-    {
-      key: "10",
-      id: 10,
-      ano: "2023",
-      tipoAcao: "Curso",
-      descricao: "Curso de python",
-      projetoId: 2,
-    },
-  ];
+  const [data, setData] = useState<any[]>();
 
-  const onFilter = () => {};
+  const onFilter = async () => {
+    const values = formFilter.getFieldsValue();
+    const res = await apiService.post("/acoes/relatorios",values );
+
+    setData(res)
+  };
 
   const items: CollapseProps["items"] = [
     {
@@ -196,7 +119,7 @@ const EmitirRelatorio = () => {
       ),
       children: (
         <div>
-          <Form form={formFilter} layout="vertical">
+          <Form form={formFilter} layout="vertical" initialValues={{ano: "2024"}}>
             <Row gutter={[16, 16]}>
               <Col span={8}>
                 <Form.Item name="ano" label="Ano">
@@ -319,6 +242,7 @@ const EmitirRelatorio = () => {
   };
 
   useEffect(() => {
+    onFilter();
     getContextData();
   }, []);
 
