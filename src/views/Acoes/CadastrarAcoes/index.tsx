@@ -29,6 +29,7 @@ import { useEffect, useState } from "react";
 import { modalidades } from "../../../data/modalidades";
 import { convertFileToBase64 } from "../../../utils/functions/convertFileToBase64";
 import ApiService from "../../../services/ApiService";
+import { all } from "axios";
 
 export interface AcaoContextDataType {
   projetos: any[];
@@ -189,6 +190,9 @@ export default function CadastrarAcoes() {
 
       const acaoToCreateOrEdit = {
         ...allValues,
+        projeto: {
+          id: allValues.projeto
+        },
         tipoAcao: {
           id: allValues.tipoAcao,
         },
@@ -255,7 +259,7 @@ export default function CadastrarAcoes() {
                     disabled={selectedTipoAcao == "Projeto"}
                   >
                     {acaoContexData?.projetos?.map((option) => (
-                      <Select.Option key={option.id} value={option.nome}>
+                      <Select.Option key={option.id} value={option.id}>
                         {option.nome}
                       </Select.Option>
                     ))}

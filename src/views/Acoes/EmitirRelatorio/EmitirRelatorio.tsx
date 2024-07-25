@@ -13,6 +13,7 @@ import {
   Space,
   Tooltip,
   Modal,
+  message,
 } from "antd";
 import {
   DeleteOutlined,
@@ -28,17 +29,26 @@ import { AcaoContextDataType } from "../CadastrarAcoes";
 import DetalhesAcao from "../DetalhesAcao/DetalhesAcao";
 import { useNavigate } from "react-router";
 import ApiService from "../../../services/ApiService";
-import { setDefaultAutoSelectFamily } from "net";
 
 const EmitirRelatorio = () => {
   const [formFilter] = Form.useForm();
   const [tipoAcoes, setTipoAcoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [contextData, setContextData] = useState();
-  const [isModalVisibleInfo, setIsModalVisibleInfo] = useState(false);
+  const [idAcao, setIdAcao] = useState(0);
   const navigate = useNavigate();
   const apiService: ApiService = new ApiService();
-  const [data, setData] = useState<any[]>();
+  const [data, setData] = useState<any[]>([]);
+
+  const onDelete = async (id: number) => {
+    try {
+      await apiService.remove(`acoes/delete/${id}`);
+      setData(data.filter((curso) => curso.id !== id));
+      message.success("Ação excluída com sucesso");
+    } catch (error) {
+      console.error("Erro ao excluir curso:", error);
+    }
+  };
 
   const onFilter = async () => {
     const values = formFilter.getFieldsValue();
@@ -263,7 +273,7 @@ const EmitirRelatorio = () => {
   const expandedRowRenderProjeto = (record: any) => {
     // Filtrar os dados que são filhos do projeto
     const filteredChildren = data.filter(
-      (item) => item.projetoId === record.id
+      (item) => item.projetoId === record.id 
     );
 
     return (
@@ -276,12 +286,12 @@ const EmitirRelatorio = () => {
     );
   };
 
-  const openModalInfo = () => {
-    setIsModalVisibleInfo(true);
+  const openModalInfo = (id: any) => {
+    setIdAcao(id)
   };
 
   const handleCancelInfo = () => {
-    setIsModalVisibleInfo(false);
+    setIdAcao(0)
   };
 
   const innerColumns = [
@@ -301,7 +311,7 @@ const EmitirRelatorio = () => {
       dataIndex: "id",
       render: (record: any) => (
         <Space size="middle">
-          <Tooltip title="Visualizar informações">
+          <Tooltip title="Visualizar/Editar informações">
             <Button
               type="primary"
               icon={<InfoCircleOutlined />}
@@ -311,17 +321,10 @@ const EmitirRelatorio = () => {
               className="ifes-btn-info"
             ></Button>
           </Tooltip>
-          <Tooltip title="Editar">
-            <Button
-              className="ifes-btn-warning"
-              icon={<EditOutlined />}
-              onClick={() => {navigate("/Ações/Editar Ação",{ state: { id: record } });}}
-            ></Button>
-          </Tooltip>
           <Tooltip title="Excluir">
             <Popconfirm
-              title="Tem certeza que deseja excluir esta instituição?"
-              onConfirm={() => onDelete(record.id)}
+              title="Tem certeza que deseja excluir esta ação?"
+              onConfirm={() => onDelete(record)}
               okText="Sim"
               cancelText="Cancelar"
             >
@@ -354,7 +357,7 @@ const EmitirRelatorio = () => {
         {record.nome == "Projeto" ? (
           <Table
             columns={innerColumnsProjeto}
-            dataSource={filteredData}
+            dataSource={filteredData?.filter(x => !x.projetoId)}
             pagination={false}
             expandedRowRender={expandedRowRenderProjeto}
             rowKey={(childRecord) => childRecord.key}
@@ -394,11 +397,11 @@ const EmitirRelatorio = () => {
         title=""
         width={"90%"}
         
-        visible={isModalVisibleInfo}
+        visible={idAcao > 0}
         onOk={handleCancelInfo}
         onCancel={handleCancelInfo}
       >
-        <DetalhesAcao id={""} />
+        <DetalhesAcao id={idAcao} />
       </Modal>
     </div>
   );

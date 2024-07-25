@@ -23,7 +23,7 @@ export interface Documento {
 }
 
 export interface DetalhesAcaoProps {
-  id: string;
+  id: any;
 }
 
 const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id }) => {
@@ -37,9 +37,10 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id }) => {
     setLoading(true);
     try {
       const response = await apiService.get(`acoes/${id}`);
+      console.log(response)
       setAcao(response);
-      setParticipants(response.participantes);
-      setDocuments(response.documentos);
+      setParticipants(response.participantes ?? []);
+      setDocuments(response.documentos ?? []);
     } catch (error) {
       console.error("Erro ao obter ação pelo ID:", error);
     } finally {
@@ -95,15 +96,15 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id }) => {
           <Row gutter={16}>
             <Col span={8}>
               <Text strong>Tipo Ação:</Text>
-              <Text>{acao.tipoAcao}</Text>
+              <Text>{acao.tipoAcao?.nome}</Text>
             </Col>
             <Col span={8}>
               <Text strong>Projeto:</Text>
-              <Text>{acao.projeto}</Text>
+              <Text>{acao.projeto?.nome}</Text>
             </Col>
             <Col span={8}>
               <Text strong>Evento:</Text>
-              <Text>{acao.evento}</Text>
+              <Text>{acao.evento?.nome}</Text>
             </Col>
           </Row>
           <Row gutter={16}>
