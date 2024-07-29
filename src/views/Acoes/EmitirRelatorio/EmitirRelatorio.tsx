@@ -35,6 +35,7 @@ const EmitirRelatorio = () => {
   const [tipoAcoes, setTipoAcoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [contextData, setContextData] = useState();
+  const [isUpdateAcao, setIsUpdateAcao] = useState(true);
   const [idAcao, setIdAcao] = useState(0);
   const navigate = useNavigate();
   const apiService: ApiService = new ApiService();
@@ -42,9 +43,12 @@ const EmitirRelatorio = () => {
 
   const onDelete = async (id: number) => {
     try {
+      setLoading(true);
       await apiService.remove(`acoes/delete/${id}`);
       setData(data.filter((curso) => curso.id !== id));
       message.success("Ação excluída com sucesso");
+      onFilter();
+      setLoading(false);
     } catch (error) {
       console.error("Erro ao excluir curso:", error);
     }
@@ -52,9 +56,9 @@ const EmitirRelatorio = () => {
 
   const onFilter = async () => {
     const values = formFilter.getFieldsValue();
-    const res = await apiService.post("/acoes/relatorios",values );
+    const res = await apiService.post("/acoes/relatorios", values);
 
-    setData(res)
+    setData(res);
   };
 
   const items: CollapseProps["items"] = [
@@ -129,7 +133,11 @@ const EmitirRelatorio = () => {
       ),
       children: (
         <div>
-          <Form form={formFilter} layout="vertical" initialValues={{ano: "2024"}}>
+          <Form
+            form={formFilter}
+            layout="vertical"
+            initialValues={{ ano: "2024" }}
+          >
             <Row gutter={[16, 16]}>
               <Col span={8}>
                 <Form.Item name="ano" label="Ano">
@@ -241,7 +249,9 @@ const EmitirRelatorio = () => {
   const getContextData = async () => {
     setLoading(true);
     try {
-      const response: AcaoContextDataType = await apiService.get("acoes/contextData");
+      const response: AcaoContextDataType = await apiService.get(
+        "acoes/contextData"
+      );
       setContextData(response);
       setTipoAcoes(response.tipoAcoes);
     } catch (error) {
@@ -273,7 +283,7 @@ const EmitirRelatorio = () => {
   const expandedRowRenderProjeto = (record: any) => {
     // Filtrar os dados que são filhos do projeto
     const filteredChildren = data.filter(
-      (item) => item.projetoId === record.id 
+      (item) => item.projetoId === record.id
     );
 
     return (
@@ -287,11 +297,11 @@ const EmitirRelatorio = () => {
   };
 
   const openModalInfo = (id: any) => {
-    setIdAcao(id)
+    setIdAcao(id);
   };
 
   const handleCancelInfo = () => {
-    setIdAcao(0)
+    setIdAcao(0);
   };
 
   const innerColumns = [
@@ -311,14 +321,25 @@ const EmitirRelatorio = () => {
       dataIndex: "id",
       render: (record: any) => (
         <Space size="middle">
-          <Tooltip title="Visualizar/Editar informações">
+          <Tooltip title="Visualizar informações">
             <Button
               type="primary"
               icon={<InfoCircleOutlined />}
               onClick={() => {
+                setIsUpdateAcao(false);
                 openModalInfo(record);
               }}
               className="ifes-btn-info"
+            ></Button>
+          </Tooltip>
+          <Tooltip title="Editar">
+            <Button
+              className="ifes-btn-warning"
+              icon={<EditOutlined />}
+              onClick={() => {
+                setIsUpdateAcao(true);
+                openModalInfo(record);
+              }}
             ></Button>
           </Tooltip>
           <Tooltip title="Excluir">
@@ -357,7 +378,7 @@ const EmitirRelatorio = () => {
         {record.nome == "Projeto" ? (
           <Table
             columns={innerColumnsProjeto}
-            dataSource={filteredData?.filter(x => !x.projetoId)}
+            dataSource={filteredData?.filter((x) => !x.projetoId)}
             pagination={false}
             expandedRowRender={expandedRowRenderProjeto}
             rowKey={(childRecord) => childRecord.key}
@@ -396,12 +417,12 @@ const EmitirRelatorio = () => {
       <Modal
         title=""
         width={"90%"}
-        
         visible={idAcao > 0}
         onOk={handleCancelInfo}
         onCancel={handleCancelInfo}
+        footer={<></>}
       >
-        <DetalhesAcao id={idAcao} />
+        <DetalhesAcao id={idAcao} isUpdate={isUpdateAcao} />
       </Modal>
     </div>
   );

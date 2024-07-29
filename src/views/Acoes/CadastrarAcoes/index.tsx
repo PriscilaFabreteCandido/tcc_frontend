@@ -59,7 +59,7 @@ export default function CadastrarAcoes() {
   const [documentos, setDocumentos] = useState([]);
   const apiService: ApiService = new ApiService();
   const [current, setCurrent] = useState(0);
-  
+
   const next = async () => {
     try {
       await form.validateFields();
@@ -97,26 +97,15 @@ export default function CadastrarAcoes() {
     );
   };
 
-  const handleParticipantesPdfChange = async ({ fileList }) => {
-    const updatedFiles = await Promise.all(
-      fileList.map(async (file:any) => {
-        const fileObj = file.originFileObj || file;
-        return await convertFileToBase64(fileObj);
-      })
-    );
-    setParticipantesPdf(updatedFiles);
-  };
-  
   const handleDocumentosChange = async ({ fileList }) => {
     const updatedFiles = await Promise.all(
-      fileList.map(async (file:any) => {
+      fileList.map(async (file: any) => {
         const fileObj = file.originFileObj || file;
         return await convertFileToBase64(fileObj);
       })
     );
     setDocumentos(updatedFiles);
   };
-  
 
   const columns = [
     {
@@ -150,7 +139,9 @@ export default function CadastrarAcoes() {
   const getContextData = async () => {
     setLoading(true);
     try {
-      const response: AcaoContextDataType = await apiService.get("acoes/contextData");
+      const response: AcaoContextDataType = await apiService.get(
+        "acoes/contextData"
+      );
       setAcaoContexData(response);
       setTipoAcoes(response.tipoAcoes);
     } catch (error) {
@@ -186,22 +177,18 @@ export default function CadastrarAcoes() {
       await form.validateFields();
       const currentValues = form.getFieldsValue();
       const allValues = { ...stepValues, ...currentValues };
-      console.log("allValues", allValues, participants);
 
       const acaoToCreateOrEdit = {
         ...allValues,
-        projeto: {
-          id: allValues.projeto
-        },
-        tipoAcao: {
-          id: allValues.tipoAcao,
-        },
-        instituicaoAtendida: {
-          id: allValues.instituicaoAtendida,
-        },
+        projeto: allValues.projeto ? { id: allValues.projeto } : null,
+        tipoAcao: { id: allValues.tipoAcao },
+        instituicaoAtendida: { id: allValues.instituicaoAtendida },
         participantesDocumento: participantesPdf[0],
         documentos,
-        acaoPessoas: participants,
+        acaoPessoas: participants.map((x) => ({
+          funcao: { id: x.funcao.id },
+          pessoa: { id: x.pessoa.id },
+        })),
       };
 
       console.log("acaoToCreateOrEdit", acaoToCreateOrEdit);
@@ -209,7 +196,10 @@ export default function CadastrarAcoes() {
         await apiService.post("acoes/create", acaoToCreateOrEdit);
         message.success("Ação criada com sucesso");
       } else {
-        await apiService.put(`acoes/update/${allValues.id}`, acaoToCreateOrEdit);
+        await apiService.put(
+          `acoes/update/${allValues.id}`,
+          acaoToCreateOrEdit
+        );
         message.success("Ação editada com sucesso");
       }
 
@@ -349,12 +339,20 @@ export default function CadastrarAcoes() {
               <>
                 <Row gutter={16}>
                   <Col span={8}>
-                    <Form.Item label="Turma" name="turma" required>
+                    <Form.Item
+                      label="Turma"
+                      name="turma"
+                      rules={[{ required: true, message: "Campo obrigatório" }]}
+                    >
                       <Input />
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <Form.Item label="Período Semestre" name="periodoSemestre">
+                    <Form.Item
+                      label="Período Semestre"
+                      name="periodoSemestre"
+                      rules={[{ required: true, message: "Campo obrigatório" }]}
+                    >
                       <Select placeholder="Selecione um projeto">
                         {acaoContexData?.periodos?.map((option) => (
                           <Select.Option key={option.id} value={option.nome}>
@@ -367,7 +365,11 @@ export default function CadastrarAcoes() {
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <Form.Item label="Modalidade" name="modalidade" required>
+                    <Form.Item
+                      label="Modalidade"
+                      name="modalidade"
+                      rules={[{ required: true, message: "Campo obrigatório" }]}
+                    >
                       <Select placeholder="Selecione um projeto">
                         {modalidades?.map((option) => (
                           <Select.Option key={option} value={option}>
@@ -383,12 +385,7 @@ export default function CadastrarAcoes() {
                     <Form.Item
                       label="Horário de Início"
                       name="inicio"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Por favor, insira o horário de início!",
-                        },
-                      ]}
+                      rules={[{ required: true, message: "Campo obrigatório" }]}
                     >
                       <TimePicker
                         format="HH:mm"
@@ -401,12 +398,7 @@ export default function CadastrarAcoes() {
                     <Form.Item
                       label="Horário de Término"
                       name="fim"
-                      rules={[
-                        {
-                          required: true,
-                          message: "Por favor, insira o horário de término!",
-                        },
-                      ]}
+                      rules={[{ required: true, message: "Campo obrigatório" }]}
                     >
                       <TimePicker
                         format="HH:mm"
@@ -419,7 +411,7 @@ export default function CadastrarAcoes() {
                     <Form.Item
                       label="Número do Processo"
                       name="numeroProcesso"
-                      required
+                      rules={[{ required: true, message: "Campo obrigatório" }]}
                     >
                       <Input />
                     </Form.Item>
@@ -427,6 +419,7 @@ export default function CadastrarAcoes() {
                 </Row>
               </>
             )}
+
             <Row gutter={16}>
               <Col span={8}>
                 <Form.Item
@@ -589,7 +582,7 @@ export default function CadastrarAcoes() {
         <div style={{ marginTop: "2rem" }}>
           <Form form={form} layout="vertical" initialValues={stepValues}>
             <Row gutter={16}>
-              <Col span={12}>
+              {/* <Col span={12}>
                 <Form.Item
                   label="Participantes (Anexar PDF)"
                   name="participantesDocumento"
@@ -606,7 +599,7 @@ export default function CadastrarAcoes() {
                     <Button icon={<UploadOutlined />}>Upload</Button>
                   </Upload>
                 </Form.Item>
-              </Col>
+              </Col> */}
               <Col span={12}>
                 <Form.Item
                   label="Documentos (Anexar PDF/Excel/Doc)"
