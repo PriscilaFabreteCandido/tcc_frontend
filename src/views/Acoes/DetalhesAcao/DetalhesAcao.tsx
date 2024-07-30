@@ -11,6 +11,8 @@ import {
   Select,
   Modal,
   message,
+  Popconfirm,
+  Upload,
 } from "antd";
 import { useEffect, useState } from "react";
 import {
@@ -19,6 +21,7 @@ import {
   EnvironmentOutlined,
   InfoCircleOutlined,
   DownloadOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
 import { colors } from "../../../global/theme/theme";
 import ApiService from "../../../services/ApiService";
@@ -35,8 +38,8 @@ export interface Participante {
 }
 
 export interface Documento {
-  name: string;
-  url: string;
+  nome: string;
+  conteudo: string;
 }
 
 export interface DetalhesAcaoProps {
@@ -54,9 +57,11 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
   const [documents, setDocuments] = useState<Documento[]>([]);
   const [form] = Form.useForm();
   const [formParticipantes] = Form.useForm();
+  const [formDocumentos] = Form.useForm();
   const apiService: ApiService = new ApiService();
   const [tipoAcao, setTipoAcao] = useState<any>();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDocumentModalVisible, setIsDocumentModalVisible] = useState(false);
 
   const getAcaoById = async (id: string) => {
     setLoading(true);
@@ -116,6 +121,20 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
       dataIndex: ["funcao", "nome"],
       key: "funcao",
     },
+    {
+      title: "Ações",
+      key: "acoes",
+      render: (record: any) => (
+        <Popconfirm
+          title="Tem certeza que deseja excluir?"
+          onConfirm={() => handleDeleteParticipant(record)}
+          okText="Sim"
+          cancelText="Não"
+        >
+          <Button type="link">Excluir</Button>
+        </Popconfirm>
+      ),
+    },
   ];
 
   const downloadBase64File = (base64Data, fileName) => {
@@ -131,6 +150,19 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const convertFileToBase64 = (file: Blob) => {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        resolve(reader.result as string);
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+    });
   };
 
   const columnsDocuments = [
@@ -166,27 +198,54 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
   };
 
   const handleAddParticipant = () => {
-    formParticipantes
-      .validateFields()
-      .then((values) => {
-        setParticipants([...participants, values]);
-        setIsModalVisible(false);
-        formParticipantes.resetFields();
-      })
-      .catch((info) => {
-        console.log("Validate Failed:", info);
-      });
+    formParticipantes.validateFields().then((values) => {
+      const newValue = {
+        funcao: contextDta?.funcoes.find((x) => x.id == values.funcao),
+        pessoa: contextDta?.pessoas.find((x) => x.id == values.pessoa),
+      };
+      console.log("newValue", newValue, values);
+      setParticipants([...participants, newValue]);
+      formParticipantes.resetFields();
+      setIsModalVisible(false);
+    });
+  };
+
+  const handleDeleteParticipant = (record: any) => {
+    setParticipants(
+      participants.filter(
+        (participant) => participant.pessoa.nome !== record.pessoa.nome
+      )
+    );
+  };
+
+  const handleAddDocument = () => {
+    formDocumentos.validateFields().then(async (values) => {
+      const fileObj = values.documentos.file.originFileObj;
+      const base64 = await convertFileToBase64(fileObj);
+      const newDocument = {
+        nome: values.nome,
+        conteudo: base64,
+      };
+      console.log("newDocument", newDocument);
+      setDocuments([...documents, newDocument]);
+      formDocumentos.resetFields();
+      setIsDocumentModalVisible(false);
+    });
   };
 
   const showModal = () => {
     setIsModalVisible(true);
   };
 
+  const showDocumentModal = () => {
+    setIsDocumentModalVisible(true);
+  };
+
   const updateAcao = async () => {
     try {
       await form.validateFields();
       const allValues = form.getFieldsValue();
-      console.log("allValues", allValues, participants);
+      console.log("allValues", allValues, participants, documents);
 
       const acaoToCreateOrEdit = {
         id: id,
@@ -200,9 +259,8 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
         instituicaoAtendida: {
           id: allValues.instituicaoAtendida,
         },
-
-        // documentos,
         acaoPessoas: participants,
+        documentos: documents,
       };
 
       console.log("acaoToCreateOrEdit", acaoToCreateOrEdit);
@@ -212,6 +270,20 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
     } catch (error) {
       console.error("Erro ao cadastrar/editar ação:", error);
     }
+  };
+
+  const handleDocumentosChange = async ({ fileList }) => {
+    const updatedDocuments = await Promise.all(
+      fileList.map(async (file: any) => {
+        const fileObj = file.originFileObj || file;
+        const base64 = await convertFileToBase64(fileObj);
+        return { nome: file.name, conteudo: base64 };
+      })
+    );
+    setDocuments((prevDocuments) => [
+      ...prevDocuments,
+      ...updatedDocuments,
+    ]);
   };
 
   if (loading) return <Spin tip="Loading..." />;
@@ -293,7 +365,7 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
           </Form.Item>
         </Col>
       </Row>
-      {tipoAcao?.nome == "Curso" && (
+      {tipoAcao?.nome === "Curso" && (
         <>
           <Row gutter={16}>
             <Col span={8}>
@@ -306,7 +378,7 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
                 <Select>
                   {contextDta?.periodos?.map((semestre: any) => (
                     <Option key={semestre.id} value={semestre.id}>
-                      {semestre.nome}
+                       {semestre.periodo === "-" ? semestre.ano : `${semestre.ano}/${semestre.periodo}`}
                     </Option>
                   ))}
                 </Select>
@@ -326,12 +398,12 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
           </Row>
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item label="Horário de Início" name="inicio">
+              <Form.Item label="Horário de Início" name="horarioInicio">
                 <Input />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label="Horário de Término" name="fim">
+              <Form.Item label="Horário de Término" name="horarioTermino">
                 <Input />
               </Form.Item>
             </Col>
@@ -420,11 +492,18 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
         style={{ marginTop: "1.5rem" }}
       >
         <FileTextOutlined className="color-primary" /> Documentos
+        <Button
+          type="primary"
+          onClick={showDocumentModal}
+          style={{ float: "right" }}
+        >
+          Adicionar Documento
+        </Button>
       </Title>
       <Table
         dataSource={documents}
         columns={columnsDocuments}
-        rowKey={(record) => record.name}
+        rowKey={(record) => record.nome}
       />
       <Form.Item>
         {isUpdate && (
@@ -477,6 +556,43 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
                 </Select.Option>
               ))}
             </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Adicionar Documento"
+        visible={isDocumentModalVisible}
+        onCancel={() => setIsDocumentModalVisible(false)}
+        onOk={handleAddDocument}
+      >
+        <Form form={formDocumentos} layout="vertical">
+          <Form.Item
+            label="Nome do Documento"
+            name="nome"
+            rules={[
+              {
+                required: true,
+                message: "Por favor, insira o nome do documento!",
+              },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Documentos (Anexar PDF/Excel/Doc)"
+            name="documentos"
+            rules={[
+              { required: true, message: "Por favor, selecione o arquivo!" },
+            ]}
+          >
+            <Upload
+              onChange={handleDocumentosChange}
+              beforeUpload={() => false} // Previne o upload automático
+              multiple
+            >
+              <Button icon={<UploadOutlined />}>Upload</Button>
+            </Upload>
           </Form.Item>
         </Form>
       </Modal>

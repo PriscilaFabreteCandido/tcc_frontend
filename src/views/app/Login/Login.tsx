@@ -17,7 +17,7 @@ const Login = () => {
     try {
       setLoading(true)
       const params = {
-        login: "teste",
+        login: "teste123",
         password: "1234"
       }
 

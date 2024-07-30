@@ -235,11 +235,18 @@ const Instituicoes: React.FC = () => {
     <>
       {/* Header */}
       <CardFooter>
-        <Collapse
-          accordion
-          items={items}
-          onChange={(key) => setExpanded(key.includes("1"))}
-        />
+        <div className="flex justify-content-between">
+          {/* Filtros */}
+          <div className="flex filtros-card"></div>
+
+          <div>
+            <Button type="primary" onClick={() => {
+                navigate("/Cadastros/Instituições/Cadastrar");
+              }} icon={<PlusOutlined />}>
+              Adicionar
+            </Button>
+          </div>
+        </div>
       </CardFooter>
 
       {/* Tabela */}

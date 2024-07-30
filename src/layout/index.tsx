@@ -36,10 +36,11 @@ function RootLayout() {
   }
 
   const getUserInfo = async () => {
+    console.log('userInfo', userInfo, userInfo?.pessoa)
     if(!userInfo){
       const res = await apiService.get('/usuarios/info')
-      dispatch(updateUserInfo({userInfo: res}))
-      setUserInfo(res)
+      dispatch(updateUserInfo({nome: res.pessoa.nome}))
+      setUserInfo({nome: res.pessoa.nome})
     }
   }
 
@@ -107,7 +108,7 @@ function RootLayout() {
             <Space style={{display: "flex", alignItems: "center", gap: 15}}>
               <Avatar style={{ backgroundColor: '#fff' }} icon={<UserOutlined style={{color: colors.secundary}}/>} />
 
-              <span style={{ color: 'white' }}>{userInfo?.pessoa?.nome}</span>
+              <span style={{ color: 'white' }}>{userInfo?.nome}</span>
 
               <Dropdown overlay={menu} trigger={['click']} >
                 <Avatar style={{ backgroundColor: colors.secundary }} icon={<AiOutlineDown />} />

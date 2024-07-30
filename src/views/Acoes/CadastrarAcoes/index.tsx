@@ -16,8 +16,6 @@ import {
   Upload,
   message,
 } from "antd";
-
-import "../styles.css";
 import {
   PlusOutlined,
   UploadOutlined,
@@ -29,7 +27,6 @@ import { useEffect, useState } from "react";
 import { modalidades } from "../../../data/modalidades";
 import { convertFileToBase64 } from "../../../utils/functions/convertFileToBase64";
 import ApiService from "../../../services/ApiService";
-import { all } from "axios";
 
 export interface AcaoContextDataType {
   projetos: any[];
@@ -54,7 +51,7 @@ export default function CadastrarAcoes() {
   const [tipoAcoes, setTipoAcoes] = useState<any[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { id } = location.state || {}; // Use useParams to get the ID from the URL
+  const { id } = location.state || {};
   const [participantesPdf, setParticipantesPdf] = useState([]);
   const [documentos, setDocumentos] = useState([]);
   const apiService: ApiService = new ApiService();
@@ -96,6 +93,7 @@ export default function CadastrarAcoes() {
       participants.filter((participant) => participant.nome !== record.nome)
     );
   };
+
 
   const handleDocumentosChange = async ({ fileList }) => {
     const updatedFiles = await Promise.all(
@@ -166,23 +164,42 @@ export default function CadastrarAcoes() {
 
   useEffect(() => {
     getContextData();
-    console.log("id", id);
     if (id) {
       getAcaoById(id);
     }
   }, [id]);
 
+  const formatTime = (time: moment.Moment | null) => {
+    return time ? time.format('HH:mm') : null;
+  };
+  
+
   const handleCadastrar = async () => {
     try {
       await form.validateFields();
       const currentValues = form.getFieldsValue();
+
+      // Add console log to check values
+      console.log("currentValues", currentValues);
+
       const allValues = { ...stepValues, ...currentValues };
+
+      // Add console log to check combined values
+      console.log("allValues", allValues);
 
       const acaoToCreateOrEdit = {
         ...allValues,
         projeto: allValues.projeto ? { id: allValues.projeto } : null,
         tipoAcao: { id: allValues.tipoAcao },
         instituicaoAtendida: { id: allValues.instituicaoAtendida },
+        //curso
+        numeroProcesso: allValues.numeroProcesso,
+        turma: allValues.turma,
+        horarioInicio: formatTime(allValues.horarioInicio),
+        horarioTermino: formatTime(allValues.horarioTermino),
+        modalidade: allValues.modalidade,
+        periodo: {id:allValues.periodoSemestre },
+        //
         participantesDocumento: participantesPdf[0],
         documentos,
         acaoPessoas: participants.map((x) => ({
@@ -191,15 +208,14 @@ export default function CadastrarAcoes() {
         })),
       };
 
+      // Add console log to check final payload
       console.log("acaoToCreateOrEdit", acaoToCreateOrEdit);
+
       if (!allValues.id) {
         await apiService.post("acoes/create", acaoToCreateOrEdit);
         message.success("Ação criada com sucesso");
       } else {
-        await apiService.put(
-          `acoes/update/${allValues.id}`,
-          acaoToCreateOrEdit
-        );
+        await apiService.put(`acoes/update/${allValues.id}`, acaoToCreateOrEdit);
         message.success("Ação editada com sucesso");
       }
 
@@ -220,18 +236,14 @@ export default function CadastrarAcoes() {
                 <Form.Item
                   label="Tipo Ação"
                   name="tipoAcao"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Por favor, selecione um projeto!",
-                    },
-                  ]}
+                  rules={[{ required: true, message: "Por favor, selecione um projeto!" }]}
                 >
                   <Select
                     placeholder="selecione"
                     onChange={(e) => {
-                      console.log(tipoAcoes.find((x) => x.id == e));
-                      setSelectedTipoAcao(tipoAcoes.find((x) => x.id == e));
+                      const selectedTipo = tipoAcoes.find((x) => x.id == e);
+                      console.log("Selected Tipo Ação:", selectedTipo);
+                      setSelectedTipoAcao(selectedTipo);
                     }}
                   >
                     {tipoAcoes.map((option) => (
@@ -244,10 +256,7 @@ export default function CadastrarAcoes() {
               </Col>
               <Col span={8}>
                 <Form.Item label="Projeto" name="projeto">
-                  <Select
-                    placeholder="Selecione um projeto"
-                    disabled={selectedTipoAcao == "Projeto"}
-                  >
+                  <Select placeholder="Selecione um projeto" disabled={selectedTipoAcao?.nome === "Projeto"}>
                     {acaoContexData?.projetos?.map((option) => (
                       <Select.Option key={option.id} value={option.id}>
                         {option.nome}
@@ -259,7 +268,7 @@ export default function CadastrarAcoes() {
               <Col span={8}>
                 <Form.Item label="Evento" name="evento">
                   <TreeSelect
-                    disabled={selectedTipoAcao == "Projeto"}
+                    disabled={selectedTipoAcao?.nome === "Projeto"}
                     showSearch
                     style={{ width: "100%" }}
                     dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
@@ -282,49 +291,29 @@ export default function CadastrarAcoes() {
           <Form form={form} layout="vertical" initialValues={stepValues}>
             <Row gutter={16}>
               <Col span={14}>
-                <Form.Item
-                  label="Nome da Ação"
-                  name="nome"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Nome da Ação" name="nome" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Input />
                 </Form.Item>
               </Col>
               <Col span={10}>
-                <Form.Item
-                  label="Público Alvo"
-                  name="publicoAlvo"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Público Alvo" name="publicoAlvo" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Input />
                 </Form.Item>
               </Col>
             </Row>
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item
-                  label="Data Início"
-                  name="dtInicio"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Data Início" name="dtInicio" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="Data Término"
-                  name="dtTermino"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Data Término" name="dtTermino" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="Instituição Atendida"
-                  name="instituicaoAtendida"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Instituição Atendida" name="instituicaoAtendida" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Select>
                     {acaoContexData?.instituicoes?.map((option) => (
                       <Select.Option key={option.id} value={option.id}>
@@ -335,41 +324,27 @@ export default function CadastrarAcoes() {
                 </Form.Item>
               </Col>
             </Row>
-            {selectedTipoAcao?.nome == "Curso" && (
+            {selectedTipoAcao?.nome === "Curso" && (
               <>
                 <Row gutter={16}>
                   <Col span={8}>
-                    <Form.Item
-                      label="Turma"
-                      name="turma"
-                      rules={[{ required: true, message: "Campo obrigatório" }]}
-                    >
+                    <Form.Item label="Turma" name="turma" rules={[{ required: true, message: "Campo obrigatório" }]}>
                       <Input />
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <Form.Item
-                      label="Período Semestre"
-                      name="periodoSemestre"
-                      rules={[{ required: true, message: "Campo obrigatório" }]}
-                    >
+                    <Form.Item label="Período Semestre" name="periodoSemestre" rules={[{ required: true, message: "Campo obrigatório" }]}>
                       <Select placeholder="Selecione um projeto">
                         {acaoContexData?.periodos?.map((option) => (
                           <Select.Option key={option.id} value={option.nome}>
-                            {option.periodo == "-"
-                              ? option.ano
-                              : option.ano + "/" + option.periodo}
+                            {option.periodo === "-" ? option.ano : `${option.ano}/${option.periodo}`}
                           </Select.Option>
                         ))}
                       </Select>
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <Form.Item
-                      label="Modalidade"
-                      name="modalidade"
-                      rules={[{ required: true, message: "Campo obrigatório" }]}
-                    >
+                    <Form.Item label="Modalidade" name="modalidade" rules={[{ required: true, message: "Campo obrigatório" }]}>
                       <Select placeholder="Selecione um projeto">
                         {modalidades?.map((option) => (
                           <Select.Option key={option} value={option}>
@@ -382,99 +357,47 @@ export default function CadastrarAcoes() {
                 </Row>
                 <Row gutter={16}>
                   <Col span={8}>
-                    <Form.Item
-                      label="Horário de Início"
-                      name="inicio"
-                      rules={[{ required: true, message: "Campo obrigatório" }]}
-                    >
-                      <TimePicker
-                        format="HH:mm"
-                        placeholder="00:00"
-                        style={{ width: "100%" }}
-                      />
+                    <Form.Item label="Horário de Início" name="horarioInicio" rules={[{ required: true, message: "Campo obrigatório" }]}>
+                      <TimePicker format="HH:mm" placeholder="00:00" style={{ width: "100%" }} />
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <Form.Item
-                      label="Horário de Término"
-                      name="fim"
-                      rules={[{ required: true, message: "Campo obrigatório" }]}
-                    >
-                      <TimePicker
-                        format="HH:mm"
-                        placeholder="00:00"
-                        style={{ width: "100%" }}
-                      />
+                    <Form.Item label="Horário de Término" name="horarioTermino" rules={[{ required: true, message: "Campo obrigatório" }]}>
+                      <TimePicker format="HH:mm" placeholder="00:00" style={{ width: "100%" }} />
                     </Form.Item>
                   </Col>
                   <Col span={8}>
-                    <Form.Item
-                      label="Número do Processo"
-                      name="numeroProcesso"
-                      rules={[{ required: true, message: "Campo obrigatório" }]}
-                    >
+                    <Form.Item label="Número do Processo" name="numeroProcesso" rules={[{ required: true, message: "Campo obrigatório" }]}>
                       <Input />
                     </Form.Item>
                   </Col>
                 </Row>
               </>
             )}
-
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item
-                  label="Quantidade de Vagas"
-                  name="qtdVagas"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Quantidade de Vagas" name="qtdVagas" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Input type="number"></Input>
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="Quantidade de Participantes"
-                  name="qtdParticipantes"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Quantidade de Participantes" name="qtdParticipantes" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Input type="number"></Input>
                 </Form.Item>
               </Col>
             </Row>
-            <Button
-              type="primary"
-              icon={<UserAddOutlined />}
-              onClick={() => setIsModalVisible(true)}
-            >
+            <Button type="primary" icon={<UserAddOutlined />} onClick={() => setIsModalVisible(true)}>
               Adicionar Participante
             </Button>
-            <Table
-              dataSource={participants}
-              columns={columns}
-              rowKey={(record) => record?.nome}
-              style={{ marginTop: "1rem" }}
-            />
-            <Modal
-              title="Adicionar Participante"
-              visible={isModalVisible}
-              onCancel={() => setIsModalVisible(false)}
-              onOk={handleAddParticipant}
-            >
+            <Table dataSource={participants} columns={columns} rowKey={(record) => record?.nome} style={{ marginTop: "1rem" }} />
+            <Modal title="Adicionar Participante" visible={isModalVisible} onCancel={() => setIsModalVisible(false)} onOk={handleAddParticipant}>
               <Form form={formParticipantes} layout="vertical">
                 <Form.Item
                   label="Participante"
                   name="pessoa"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Por favor, insira o nome do participante!",
-                    },
-                  ]}
+                  rules={[{ required: true, message: "Por favor, insira o nome do participante!" }]}
                 >
-                  <Select
-                    onChange={(e) => {
-                      setSelectedTipoAcao(e);
-                    }}
-                  >
+                  <Select>
                     {acaoContexData?.pessoas?.map((option) => (
                       <Select.Option key={option.id} value={option.id}>
                         {option.nome}
@@ -485,15 +408,9 @@ export default function CadastrarAcoes() {
                 <Form.Item
                   label="Função"
                   name="funcao"
-                  rules={[
-                    { required: true, message: "Por favor, insira a função!" },
-                  ]}
+                  rules={[{ required: true, message: "Por favor, insira a função!" }]}
                 >
-                  <Select
-                    onChange={(e) => {
-                      setSelectedTipoAcao(e);
-                    }}
-                  >
+                  <Select>
                     {acaoContexData?.funcoes?.map((option) => (
                       <Select.Option key={option.id} value={option.id}>
                         {option.nome}
@@ -514,60 +431,34 @@ export default function CadastrarAcoes() {
           <Form form={form} layout="vertical" initialValues={stepValues}>
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item
-                  label="CEP"
-                  name="cep"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
-                  <Input
-                    onChange={(e: any) => buscarEnderecoPorCEP(e.target.value)}
-                  />
+                <Form.Item label="CEP" name="cep" rules={[{ required: true, message: "Campo obrigatório" }]}>
+                  <Input onChange={(e: any) => buscarEnderecoPorCEP(e.target.value)} />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="Endereço"
-                  name="endereco"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Endereço" name="endereco" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Input />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="Rua"
-                  name="rua"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Rua" name="rua" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Input />
                 </Form.Item>
               </Col>
             </Row>
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item
-                  label="UF"
-                  name="uf"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="UF" name="uf" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Input />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="Cidade"
-                  name="cidade"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Cidade" name="cidade" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Input />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="Número"
-                  name="numero"
-                  rules={[{ required: true, message: "Campo obrigatório" }]}
-                >
+                <Form.Item label="Número" name="numero" rules={[{ required: true, message: "Campo obrigatório" }]}>
                   <Input />
                 </Form.Item>
               </Col>
@@ -582,29 +473,8 @@ export default function CadastrarAcoes() {
         <div style={{ marginTop: "2rem" }}>
           <Form form={form} layout="vertical" initialValues={stepValues}>
             <Row gutter={16}>
-              {/* <Col span={12}>
-                <Form.Item
-                  label="Participantes (Anexar PDF)"
-                  name="participantesDocumento"
-                >
-                  <Upload
-                    fileList={participantesPdf.map((file) => ({
-                      uid: file.nome,
-                      name: file.nome,
-                      status: "done",
-                    }))}
-                    onChange={handleParticipantesPdfChange}
-                    beforeUpload={() => false} // Previne o upload automático
-                  >
-                    <Button icon={<UploadOutlined />}>Upload</Button>
-                  </Upload>
-                </Form.Item>
-              </Col> */}
               <Col span={12}>
-                <Form.Item
-                  label="Documentos (Anexar PDF/Excel/Doc)"
-                  name="documentos"
-                >
+                <Form.Item label="Documentos (Anexar PDF/Excel/Doc)" name="documentos">
                   <Upload
                     fileList={documentos.map((file) => ({
                       uid: file.nome,
