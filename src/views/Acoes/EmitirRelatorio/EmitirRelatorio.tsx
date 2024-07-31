@@ -14,6 +14,7 @@ import {
   Tooltip,
   Modal,
   message,
+  Spin,
 } from "antd";
 import {
   DeleteOutlined,
@@ -45,20 +46,27 @@ const EmitirRelatorio = () => {
     try {
       setLoading(true);
       await apiService.remove(`acoes/delete/${id}`);
-      setData(data.filter((curso) => curso.id !== id));
+      setData(data.filter((acao) => acao.id !== id));
       message.success("Ação excluída com sucesso");
       onFilter();
       setLoading(false);
     } catch (error) {
-      console.error("Erro ao excluir curso:", error);
+      console.error("Erro ao excluir ação:", error);
     }
   };
 
   const onFilter = async () => {
-    const values = formFilter.getFieldsValue();
-    const res = await apiService.post("/acoes/relatorios", values);
+    setLoading(true); // Iniciar o carregamento
+    let values = formFilter.getFieldsValue();
+    const pessoas = values?.pessoas?.map(x => ({ id: x }))
+    values = {
+      ...values,
+      pessoas: pessoas?.length > 0 ? pessoas :  null,
 
+    }
+    const res = await apiService.post("/acoes/relatorios", values);
     setData(res);
+    setLoading(false); // Finalizar o carregamento
   };
 
   const items: CollapseProps["items"] = [
@@ -101,33 +109,6 @@ const EmitirRelatorio = () => {
               <span style={{ marginLeft: "5px" }}>Filtrar</span>
             </Button>
 
-            <Button
-              className="ifes-btn-danger"
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <FilePdfOutlined className="ifes-icon" />
-              <span style={{ marginLeft: "5px" }}>Emitir PDF</span>
-            </Button>
-
-            <Button
-              className="ifes-btn-warning"
-              type="primary"
-              onClick={() => {
-                // Lógica de emissão de relatório em Excel
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginRight: "10px",
-              }}
-            >
-              <FileExcelOutlined className="ifes-icon" />
-              <span style={{ marginLeft: "5px" }}>Emitir Excel</span>
-            </Button>
           </div>
         </div>
       ),
@@ -155,7 +136,7 @@ const EmitirRelatorio = () => {
               </Col>
 
               <Col span={8}>
-                <Form.Item name="tipoAcao" label="Tipo Ação">
+                <Form.Item name="idTipoAcao" label="Tipo Ação">
                   <Select
                     placeholder="Selecione um tipo de ação"
                     style={{ width: "100%" }}
@@ -170,7 +151,7 @@ const EmitirRelatorio = () => {
               </Col>
 
               <Col span={8}>
-                <Form.Item name="projeto" label="Projeto">
+                <Form.Item name="idProjeto" label="Projeto">
                   <Select
                     placeholder="Selecione um projeto"
                     style={{ width: "100%" }}
@@ -187,7 +168,7 @@ const EmitirRelatorio = () => {
 
             <Row gutter={[16, 16]}>
               <Col span={8}>
-                <Form.Item name="inicio" label="Data Início">
+                <Form.Item name="dtInicio" label="Data Início">
                   <DatePicker
                     style={{ width: "100%" }}
                     format="DD/MM/YYYY"
@@ -197,7 +178,7 @@ const EmitirRelatorio = () => {
               </Col>
 
               <Col span={8}>
-                <Form.Item name="termino" label="Data de Término">
+                <Form.Item name="dtTermino" label="Data de Término">
                   <DatePicker
                     style={{ width: "100%" }}
                     format="DD/MM/YYYY"
@@ -207,7 +188,7 @@ const EmitirRelatorio = () => {
               </Col>
 
               <Col span={8}>
-                <Form.Item name="participantes" label="Participantes">
+                <Form.Item name="pessoas" label="Participantes">
                   <Select
                     placeholder="Selecione um projeto"
                     style={{ width: "100%" }}
@@ -255,7 +236,7 @@ const EmitirRelatorio = () => {
       setContextData(response);
       setTipoAcoes(response.tipoAcoes);
     } catch (error) {
-      console.error("Erro ao obter cursos:", error);
+      console.error("Erro ao obter dados:", error);
     } finally {
       setLoading(false);
     }
@@ -281,7 +262,6 @@ const EmitirRelatorio = () => {
   ];
 
   const expandedRowRenderProjeto = (record: any) => {
-    // Filtrar os dados que são filhos do projeto
     const filteredChildren = data.filter(
       (item) => item.projetoId === record.id
     );
@@ -370,7 +350,6 @@ const EmitirRelatorio = () => {
       },
     ];
 
-    // Filtrar os dados pelo tipo de ação
     const filteredData = data.filter((item) => item.tipoAcao === record.nome);
 
     return (
@@ -378,7 +357,7 @@ const EmitirRelatorio = () => {
         {record.nome == "Projeto" ? (
           <Table
             columns={innerColumnsProjeto}
-            dataSource={filteredData?.filter((x) => !x.projetoId)}
+            dataSource={filteredData?.filter((x) => x.projetoId <= 0)}
             pagination={false}
             expandedRowRender={expandedRowRenderProjeto}
             rowKey={(childRecord) => childRecord.key}
@@ -386,7 +365,7 @@ const EmitirRelatorio = () => {
         ) : (
           <Table
             columns={innerColumns}
-            dataSource={filteredData}
+            dataSource={filteredData?.filter((x) => x.projetoId <= 0)}
             pagination={false}
             rowKey={(childRecord) => childRecord.key}
           />
@@ -405,14 +384,22 @@ const EmitirRelatorio = () => {
           defaultActiveKey={["1"]}
         />
       </div>
-      <Table
-        columns={columns}
-        dataSource={tipoAcoes}
-        loading={loading}
-        pagination={false}
-        expandedRowRender={expandedRowRender}
-        rowKey={(record) => record.id}
-      />
+      <Spin size="large" spinning={loading}>
+        {data.length > 0 ? (
+          <Table
+            columns={columns}
+            dataSource={tipoAcoes.filter((tipoAcao) =>
+              data.some((acao) => acao.tipoAcao === tipoAcao.nome)
+            )}
+            loading={loading}
+            pagination={false}
+            expandedRowRender={expandedRowRender}
+            rowKey={(record) => record.id}
+          />
+        ) : (
+          <p>Nenhum dado encontrado</p>
+        )}
+      </Spin>
 
       <Modal
         title=""

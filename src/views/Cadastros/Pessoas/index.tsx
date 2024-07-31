@@ -143,7 +143,7 @@ const Pessoas: React.FC = () => {
             </Popconfirm>
           </Tooltip>
 
-          <Tooltip title={record.ativo ? "Desativar" : "Ativar"}>
+          {/* <Tooltip title={record.ativo ? "Desativar" : "Ativar"}>
             <Popconfirm
               title={`Tem certeza que deseja ${record.ativo ? 'desativar' : 'ativar'} esta pessoa?`}
               onConfirm={() => handleToggleActive(record)}
@@ -154,7 +154,7 @@ const Pessoas: React.FC = () => {
                 {record.ativo ? <CloseOutlined className="ifes-icon" /> : <CheckOutlined className="ifes-icon" />}
               </Button>
             </Popconfirm>
-          </Tooltip>
+          </Tooltip> */}
         </Space>
       ),
     },

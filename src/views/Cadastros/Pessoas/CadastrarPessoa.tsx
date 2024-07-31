@@ -62,11 +62,12 @@ const CadastrarPessoa = () => {
 
   useEffect(() => {
     if (pessoa) {
+      console.log("pessoa", pessoa)
       form.setFieldsValue({
         nome: pessoa.nome,
         cpf: pessoa.cpf,
         matricula: pessoa.matricula,
-        dataNascimento: pessoa.dtNascimento ? pessoa.dtNascimento.format("YYYY-MM-DD") : null,
+        dataNascimento: new Date(pessoa.dtNascimento),
         telefone: pessoa.telefone,
         curso: pessoa.curso?.id,
         instituicao: pessoa.instituicao?.id,

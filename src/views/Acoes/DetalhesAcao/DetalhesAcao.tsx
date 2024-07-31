@@ -28,6 +28,7 @@ import ApiService from "../../../services/ApiService";
 import moment from "moment";
 import { AcaoContextDataType } from "../CadastrarAcoes";
 import { modalidades } from "../../../data/modalidades";
+import { convertFileToBase64 } from "../../../utils/functions/convertFileToBase64";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -152,18 +153,7 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
     URL.revokeObjectURL(url);
   };
 
-  const convertFileToBase64 = (file: Blob) => {
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        resolve(reader.result as string);
-      };
-      reader.onerror = (error) => {
-        reject(error);
-      };
-    });
-  };
+
 
   const columnsDocuments = [
     {
@@ -220,7 +210,8 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
 
   const handleAddDocument = () => {
     formDocumentos.validateFields().then(async (values) => {
-      const fileObj = values.documentos.file.originFileObj;
+      const fileObj = values.documentos.fileList[0].originFileObj;
+      console.log(values)
       const base64 = await convertFileToBase64(fileObj);
       const newDocument = {
         nome: values.nome,
@@ -285,6 +276,8 @@ const DetalhesAcao: React.FC<DetalhesAcaoProps> = ({ id, isUpdate = true }) => {
       ...updatedDocuments,
     ]);
   };
+
+  
 
   if (loading) return <Spin tip="Loading..." />;
 

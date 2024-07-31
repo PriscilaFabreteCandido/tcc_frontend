@@ -12,13 +12,15 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const apiService: ApiService = new ApiService();
+  const [form] = Form.useForm();
 
   const handleLogin = async () => {
     try {
       setLoading(true)
+      const values = await form.getFieldsValue();
       const params = {
-        login: "teste123",
-        password: "1234"
+        login: values.login,
+        password: values.password
       }
 
       const response = await apiService.post("/usuarios/login", params)
@@ -68,12 +70,13 @@ const Login = () => {
             </div>
             <Form
               name="basic"
+              form={form}
               initialValues={{ remember: true }}
               onFinish={handleLogin}
               onFinishFailed={() => {}}
             >
               <Form.Item
-                name="username"
+                name="login"
                 rules={[
                   { required: false, message: "Please input your username!" },
                 ]}

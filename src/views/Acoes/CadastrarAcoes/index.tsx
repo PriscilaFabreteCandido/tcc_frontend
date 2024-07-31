@@ -198,7 +198,7 @@ export default function CadastrarAcoes() {
         horarioInicio: formatTime(allValues.horarioInicio),
         horarioTermino: formatTime(allValues.horarioTermino),
         modalidade: allValues.modalidade,
-        periodo: {id:allValues.periodoSemestre },
+        periodo: allValues.periodoSemestre ? {id:allValues.periodoSemestre }: null,
         //
         participantesDocumento: participantesPdf[0],
         documentos,
@@ -266,7 +266,7 @@ export default function CadastrarAcoes() {
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="Evento" name="evento">
+                {/* <Form.Item label="Evento" name="evento">
                   <TreeSelect
                     disabled={selectedTipoAcao?.nome === "Projeto"}
                     showSearch
@@ -277,7 +277,7 @@ export default function CadastrarAcoes() {
                     treeDefaultExpandAll
                     treeData={acaoContexData?.eventos}
                   />
-                </Form.Item>
+                </Form.Item> */}
               </Col>
             </Row>
           </Form>
